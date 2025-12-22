@@ -1,0 +1,481 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+
+:root{
+    --bg:#f6f8fb; --card:#ffffff; --ink:#0f172a; --muted:#64748b;
+    --brand:#9bd8f3; --brand-ink:#0c4a6e; --stroke:#e2e8f0; --shadow:0 6px 18px rgba(15,23,42,.06);
+    --radius:16px; --leftw:260px; --gap:14px;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0; background:var(--bg); color:var(--ink); font:18px/2 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Inter,Helvetica,Arial; zoom: 75%; transform-origin: 0 0; overflow-x: hidden;}
+
+.app{display:grid; grid-template-rows:auto 1fr; grid-template-columns:320px 1fr; grid-template-areas:"top top" "side main"; min-height:100vh;}
+
+/* ===== Header - optimized for 75% zoom ===== */
+.top{grid-area:top; background:var(--brand); color:var(--brand-ink); padding:6px 12px; box-shadow:var(--shadow); position:sticky; top:0; z-index:100;}
+.top-inner{margin:0; display:grid; grid-template-columns:auto 1fr; column-gap:16px; align-items:center; min-height:60px; padding: 0 10px;}
+
+.left-col{
+    display:grid; 
+    row-gap:10px; 
+    align-content:start; 
+    padding-top:4px; 
+    justify-self:start; 
+    width:fit-content;
+    margin-left:0;
+    padding-left:0;
+}
+.toggle-row{
+    display:flex; 
+    gap:10px; 
+    align-items:center; 
+    flex-wrap:wrap; 
+    justify-content:center;
+    margin-left:0;
+    margin-top: 20px;
+    padding-top: 20px;
+    padding-left:0;
+}
+.toggle{display:inline-flex; gap:8px; align-items:center; font-weight:600; white-space:nowrap; font-size:16px;}  /* Tăng gap và font-size */
+.toggle input{width:20px; height:20px; accent-color:var(--brand-ink);}  /* Tăng kích thước checkbox */
+
+/* Clear button - compact for 75% zoom */
+.clear-btn{
+    padding:10px 16px; border:1px solid var(--stroke);
+    background:#ffffff; color:#0c4a6e; border-radius:8px; font-weight:400; cursor:pointer;
+    transition:box-shadow .15s ease, transform .03s ease;
+    font-size:16px;
+    min-height:42px;
+    text-align: center;
+    width: 100%;
+}
+.clear-btn:active{ transform:translateY(1px); }
+.clear-btn:hover{ box-shadow:var(--shadow);background: #fcfcfc; }
+
+/* Search button - compact for 75% zoom */
+.search-btn{
+    padding:16px 16px; border:1px solid var(--stroke);
+    background:#50b0d7; color:#ffffff; border-radius:8px; font-weight:500; cursor:pointer;
+    transition:box-shadow .15s ease, transform .03s ease;
+    font-size:18px;
+    min-height:42px;
+    text-align: center;
+    width: 100%;
+    position: relative;
+}
+.search-btn:active{ transform:translateY(1px); }
+.search-btn:hover{ box-shadow:var(--shadow); background:#0284c7; }
+.search-btn:disabled,
+.search-btn.search-disabled { 
+    background:#94a3b8; 
+    cursor:not-allowed; 
+    opacity:0.7;
+    position: relative;
+}
+
+/* Fix to ensure search button pointer events work */
+.search-btn {
+    pointer-events: auto !important;
+}
+
+.search-btn:disabled::after,
+.search-btn.search-disabled::after {
+    content: "⚠️";
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #f59e0b;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+/* Notification badge */
+.search-btn::after {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #f59e0b;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+.search-btn.loading{ 
+    background:#f59e0b; cursor:wait;
+}
+
+.right-col {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+    width: 100%;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+}
+
+.right-col .query-main {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    background: #ffffff;
+    border: 1px solid var(--stroke);
+    border-radius: 12px;
+    padding: 12px 16px;
+    position: relative;
+    z-index: 5;              /* Higher than tabs (z-index: 1) but lower than header (z-index: 100) */
+    min-height: 60px;
+}
+
+.right-col .query-main input {
+    flex: 1;
+    border: 0;
+    outline: none;
+    background: transparent;
+    font-size: 16px;
+    padding: 8px;
+    height: 40px;
+}
+
+.right-col .sub-rows {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+}
+
+.right-col .sub-query {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    background: #ffffff;
+    border: 1px solid var(--stroke);
+    border-radius: 10px;
+    padding: 10px 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    position: relative;
+    z-index: 5;              /* Higher than tabs (z-index: 1) but lower than header (z-index: 100) */
+    min-height: 60px;
+}
+
+.right-col .sub-query input {
+    flex: 1;
+    border: 0;
+    outline: none;
+    background: transparent;
+    font-size: 16px;
+    padding: 8px;
+    height: 40px;
+}
+
+.right-col .sub-query input:disabled {
+    background-color: #f0f0f0;
+    cursor: not-allowed;
+}
+
+.right-col .sub-query input:disabled::placeholder {
+    opacity: 0.5;
+    color: #a0aec0;
+}
+
+.right-col{display:flex; flex-direction:column; gap:8px; flex:1; min-width:0; width:100%;}
+
+/* Query area styles */
+.right-col{background:#9bd8f3; padding:10px; border-radius:10px; min-height:80px; width:100%;}
+.right-col .query-main{display:flex; gap:12px; align-items:center; background:#fff; border:1px solid var(--stroke); border-radius:12px; padding:12px 16px;}
+.right-col .query-main input{flex:1; border:0; outline:none; background:transparent; font-size:16px;}
+.pill{padding:6px 10px; border:1px dashed var(--brand-ink); border-radius:6px; font-size:12px; font-weight: 600; color:var(--brand-ink); background:#9bd8f3;}
+/* Specific styling for OCR pill */
+.sub-query:nth-child(1) .pill{background:#e2e8f0; color:#0e4a79; border:1px dashed #0e4a79;}
+/* Specific styling for ASR pill */
+.sub-query:nth-child(2) .pill{background:#e2e8f0; color:#0e4a79; border:1px dashed #0e4a79;}
+.right-col .sub-rows{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+.right-col .sub-query{display:flex; gap:10px; align-items:center; background:#fff; border:1px solid var(--stroke); border-radius:10px; padding:10px 12px;}
+.right-col .sub-query input{flex:1; border:0; outline:none; background:transparent; font-size:16px;}
+.right-col .sub-query input:disabled{
+    background-color:#ffffff;
+    cursor:not-allowed;
+}
+.right-col .sub-query input:disabled::placeholder {
+    opacity: 0.4;
+    color: #94a3b8;
+}
+
+/* Temporal mode - 3 columns layout FILL HEADER WIDTH */
+.temporal-grid{
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 10px !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 10px !important;
+    box-sizing: border-box !important;
+}
+
+.qgroup{
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 0;
+    width: 100%;
+    flex: 1 1 0;
+    max-width: 100%;
+}
+
+.qgroup .qbox{
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    background: #fff;
+    border: 1px solid var(--stroke);
+    border-radius: 12px;
+    padding: 12px 16px;
+    min-height: 60px;
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.qgroup .qbox .pill{
+    background: var(--brand);
+    color: var(--brand-ink);
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 12px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.qgroup .qbox input{
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 16px;
+    padding: 8px;
+    height: 40px;
+    min-width: 0;
+    width: 100%;
+}
+
+.qgroup .qsubs{
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.qgroup .qsubs .sub{
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    background: #ffffff;
+    border: 1px solid var(--stroke);
+    border-radius: 10px;
+    padding: 10px 12px;
+    min-height: 60px;
+    box-sizing: border-box;
+    width: 100%;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.qgroup .qsubs .sub .pill{
+    background: #e2e8f0;
+    color: #0e4a79;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 12px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    border: 1px dashed #0e4a79;
+}
+
+.qgroup .qsubs .sub input{
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 16px;
+    padding: 8px;
+    height: 40px;
+    min-width: 0;
+    width: 100%;
+}
+
+/* Temporal mode container overrides - match with general mode */
+.right-col.temporal-mode {
+    background: #9bd8f3 !important;
+    padding: 0 !important;
+    min-height: 80px !important;
+    border-radius: 10px !important;
+    width: 100% !important;
+    max-width: none !important;
+    display: block !important;
+    flex-direction: unset !important;
+    gap: unset !important;
+    flex: 1 !important;
+    min-width: 0 !important;
+}
+
+/* Khi temporal bật: thu gọn cột trái để nhường chỗ */
+.top-inner.compact{ grid-template-columns:auto 1fr; column-gap:10px; }
+.top-inner.compact .toggle-row{ gap:10px; }
+.top-inner.compact .toggle input{ width:16px; height:16px; }
+
+
+
+
+/* Sidebar - ultra compact for 75% zoom */
+.side{
+    grid-area:side; 
+    padding:12px 12px 4px 4px; 
+    overflow-y:auto; overflow-x:hidden; 
+    height:30px; min-height:unset; 
+    display:flex; 
+    flex-direction:column;
+}
+
+.stack{display:grid; gap:10px; flex:1; overflow:visible; padding-top:10px;}
+
+/* Card divider */
+.card-divider {
+    height: 1px;
+    background-color: var(--stroke);
+    margin: 15px 0 10px 0;
+}
+
+/* Button container for clear and search buttons */
+.button-container {
+    padding: 5px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.card{background:var(--card); border:1px solid var(--stroke); border-radius:var(--radius); padding:10px; overflow:visible; position:relative;}
+.group-title{font-weight:800; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; font-size:17px; margin-bottom:8px;}
+.option{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:5px 7px; border-radius:8px; border:1px solid transparent;
+    cursor:pointer;
+}
+.option:hover:not(.disabled){background:#f8fafc; border-color:var(--stroke);}
+.option:active:not(.disabled){transform:translateY(1px);}
+.option label{display:flex; gap:10px; align-items:center; cursor:pointer; width:100%; font-size:18px; }
+.option input[type="checkbox"]{width:20px; height:20px; accent-color:#0ea5e9;}
+.option input[type="checkbox"]:disabled{opacity:0.5; cursor:not-allowed;}
+.sub-query input:disabled{background-color:#ffffff; cursor:not-allowed;}
+
+/* === Tools Input Fields: Disabled === */
+
+
+.option.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background-color: #ffffff;
+    pointer-events: none;
+}
+.option.disabled label {
+    cursor: not-allowed;
+}
+.option.disabled * {
+    pointer-events: none;
+}
+
+/* Disabled styles for checkboxes */
+.option input[type="checkbox"]:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Specific styles for ASR and OCR */
+.option.asr input[type="checkbox"]:disabled {
+    background-color: #f0f0f0;
+}
+.option.ocr input[type="checkbox"]:disabled {
+    background-color: #f0f0f0;
+}
+
+/* nhóm 3 checkbox bên phải */
+.triple{display:inline-flex; gap:10px; align-items:center;}
+.option .right{margin-left:auto; display:inline-flex; align-items:center;}
+
+.btn{display:inline-flex; justify-content:center; align-items:center; width:100%; padding:8px 12px; border-radius:10px; border:1px solid var(--stroke); background:#eef2ff; cursor:pointer; font-weight:700; font-size:16px;}
+.btn:active{transform:translateY(1px);}
+
+/* Main panels: optimized for 75% zoom */
+.main{grid-area:main; padding:12px; display:flex; flex-direction:column; gap:10px; width:100%; overflow-x:hidden;}
+
+/* Main panel when in temporal mode - allow full width */
+.main:has(.temporal-grid), 
+.main .temporal-grid {
+    overflow-x: visible !important;
+}
+.panel{background:var(--card); border:1px solid var(--stroke); border-radius:10px; padding:8px; box-shadow:var(--shadow); min-height:0;}
+
+/* Responsive for 75% zoom */
+@media (max-width:1200px){
+    /* Stack temporal mode when needed */
+    .temporal-grid{ 
+        grid-template-columns: 1fr !important;
+        gap: 16px !important;
+        width: 100% !important;
+        padding: 0 !important;
+        left: auto !important;
+        right: auto !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+    }
+    
+    .qgroup {
+        max-width: 600px;
+        margin: 0 auto 20px;
+    }
+}
+
+@media (max-width:1100px){
+    .top-inner{grid-template-columns:1fr;}
+    .left-col{grid-auto-flow:column; column-gap:16px; row-gap:0;}
+    .side{display:none;}
+}
+
+/* tránh khựng con trỏ khi gõ */
+.query-main input,
+.sub-query input,
+.qgroup .qbox input,
+.qgroup .qsubs .sub input{width:100%; flex:1 1 auto; min-width:0;}
+.query-main input:focus,
+.sub-query input:focus,
+.qgroup .qbox input:focus,
+.qgroup .qsubs .sub input:focus{outline:none; box-shadow:none; transition:none;}
+
+/* === Object Filtering Widget: Disabled === */
+.filter-widget, .filter-row, .filter-input, 
+.filter-suggest, .filter-actions, .filter-btn, 
+.filter-output, .filter-hint {
+  display: none !important;
+}
+:root{
+--topH: 60px; /* fallback nếu JS chưa tính kịp */
+}
+
+/* Cố định sidebar ngay dưới header, tự cuộn nội dung trong sidebar */
+.side{
+    position: sticky;
+    top: var(--topH);
+    align-self: start;
+    height: auto;      /* Sửa lại thành auto */
+    min-height: unset; /* Thêm nếu muốn bỏ min-height */
+    overflow: auto;
+}
+

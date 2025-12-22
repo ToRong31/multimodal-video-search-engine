@@ -1,0 +1,80 @@
+/* CSS Media Query for overflow tabs */
+@media (max-width: 768px) {
+    .tabs {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        flex-wrap: nowrap;
+        padding-bottom: 5px;
+        position: static;    /* Static position like panels on mobile too */
+        z-index: auto;       /* No z-index - natural stacking order */
+    }
+    
+    .tab {
+        flex: 0 0 auto;
+    }
+}
+
+/* Fix for white space issue */
+.main {
+    display: flex !important;
+    flex-direction: column !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+}
+
+/* Fix tabs and panels container */
+.tabs-wrapper {
+    width: 100%;
+    display: block;
+    position: relative;
+    margin-bottom: 15px;
+}
+
+/* Fix tab panel display */
+.tab-panels-container {
+    width: 100%;
+    display: block;
+    margin-top: 0;
+}
+
+/* Fix panel container */
+.panel-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* Make sure content doesn't overflow */
+.panel, .tab-panel {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+/* Fix for specific scrollbar issues */
+::-webkit-scrollbar {
+    height: 6px;
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Ensure tab content is properly displayed */
+.tab-panels-container .tab-panel {
+    margin-bottom: 15px;
+    padding: 15px;
+}

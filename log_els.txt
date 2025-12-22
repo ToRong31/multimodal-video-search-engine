@@ -1,0 +1,23 @@
+nohup: ignoring input
+/workspace/app/elastic_search/index.py:58: DeprecationWarning: Passing transport options in the API method is deprecated. Use 'Elasticsearch.options()' instead.
+  es.indices.create(index=index_name, body=mapping, ignore=400)
+[✓] Connected to Elasticsearch at: http://elasticsearch:9200
+Ping: True
+Info: {'name': '3b7f9b6f5735', 'cluster_name': 'docker-cluster', 'cluster_uuid': 'LoJAxwvhTZWMdHNEAR4oCQ', 'version': {'number': '8.18.4', 'build_flavor': 'default', 'build_type': 'docker', 'build_hash': '43b24f613cf25fd3f3369df174e9535a99512aec', 'build_date': '2025-07-16T22:07:56.651816195Z', 'build_snapshot': False, 'lucene_version': '9.12.1', 'minimum_wire_compatibility_version': '7.17.0', 'minimum_index_compatibility_version': '7.0.0'}, 'tagline': 'You Know, for Search'}
+Resolved DATA_FOLDER: /workspace/data/index/sparse
+Found 3 file(s).
+
+-- Processing `/workspace/data/index/sparse/asr.json` → index `asr`
+ → Indexed: 285361/285361 successful, 0 failed
+
+-- Processing `/workspace/data/index/sparse/ocr.json` → index `ocr`
+ → Indexed: 777038/777038 successful, 0 failed
+
+-- Processing `/workspace/data/index/sparse/ic.json` → index `ic`
+ → Indexed: 777038/777038 successful, 0 failed
+
+Current indices:
+yellow open asr 7mgQr-rcRMatcpoCAb98yw 1 1 285361      0  66.7mb  66.7mb  66.7mb
+yellow open ic  C9OWY8jLRveb4jtnQ-faxA 1 1 622691      0 583.5mb 583.5mb 583.5mb
+yellow open ocr ggBpFPGDSouMaoAKx5f39Q 1 1 777038 313537 290.8mb 290.8mb 290.8mb
+

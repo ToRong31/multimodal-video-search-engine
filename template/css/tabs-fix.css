@@ -1,0 +1,78 @@
+/* Additional fixes for tabs display */
+.tabs-wrapper {
+    width: 100%;
+    display: block;
+    margin-bottom: 0;
+    position: static;       /* Static like panels */
+    background-color: var(--bg);
+}
+
+/* Make sure tabs stay at the top */
+#tabs {
+    position: static;       /* Static like panels - will be covered when scrolling */
+    z-index: auto;          /* Natural stacking order */
+    width: fit-content;
+    min-width: 100px;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    display: flex;
+    padding-bottom: 5px; /* Add padding to ensure scrollbar doesn't cover content */
+}
+
+/* Ensure there's no white space issue */
+.main {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    overflow-x: hidden;
+}
+
+/* Panel container styles */
+.panel-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    width: 100%;
+}
+
+/* Make tab panels look nice */
+.tab-panel {
+    margin-bottom: 20px;
+    background-color: var(--card);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+}
+
+/* Ensure the panel container doesn't overflow horizontally */
+#panel-container {
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+/* ===== Tabs Behavior - Static Like Panels ===== */
+/* Tabs now use static positioning like panels - will be covered when scrolling */
+
+/* Ensure query area always appears above tabs when scrolling */
+.right-col .query-main,
+.right-col .sub-query,
+.right-col .temporal-mode .query-main,
+.right-col .temporal-mode .sub-query {
+    position: relative !important;
+    z-index: 100 !important;        /* Very high z-index to ensure above tabs */
+}
+
+/* Force all tabs to be below query area */
+.tabs,
+#tabs,
+.tabs-wrapper,
+.tab,
+.tab.active {
+    position: static !important;
+    z-index: 1 !important;          /* Very low z-index to ensure below query area */
+}
+
+/* Ensure header is always on top */
+.top {
+    z-index: 1000 !important;       /* Highest z-index */
+}

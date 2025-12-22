@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Video Retrieval UI</title>
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="data:image/x-icon;base64,AAABAAEAEBAAAAEAIABoBAAAFgAAACgAAAAQAAAAIAAAAAEAIAAAAAAAAAQAABILAAASCwAAAAAAAAAAAAD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8ASEhI/0hISP9ISEj/SEhI/0hISP9ISEj/SEhI/0hISP9ISEj/SEhI/0hISP9ISEj/SEhI/////wD///8A////AEhISP9ISEj/SEhI/0hISP9ISEj/SEhI/0hISP9ISEj/SEhI/0hISP9ISEj/SEhI/0hISP////8A////AP///wBISEj/SEhI////////////SEhI/0hISP9ISEj/SEhI/0hISP9ISEj///////////9ISEj/////AP///wD///8ASEhI/0hISP///////////0hISP9ISEj/SEhI/0hISP9ISEj/SEhI////////////SEhI/////wD///8A////AEhISP9ISEj///////////9ISEj/SEhI/0hISP9ISEj/SEhI/0hISP///////////0hISP////8A////AP///wBISEj/SEhI////////////SEhI/0hISP9ISEj/SEhI/0hISP9ISEj///////////9ISEj/////AP///wD///8ASEhI/0hISP///////////0hISP9ISEj/SEhI/0hISP9ISEj/SEhI////////////SEhI/////wD///8A////AEhISP9ISEj///////////9ISEj/SEhI/0hISP9ISEj/SEhI/0hISP///////////0hISP////8A////AP///wBISEj/SEhI////////////SEhI/0hISP9ISEj/SEhI/0hISP9ISEj///////////9ISEj/////AP///wD///8ASEhI/0hISP9ISEj/SEhI/0hISP9ISEj/SEhI/0hISP9ISEj/SEhI/0hISP9ISEj/SEhI/////wD///8A////AEhISP9ISEj/SEhI/0hISP9ISEj/SEhI/0hISP9ISEj/SEhI/0hISP9ISEj/SEhI/0hISP////8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wA=">
+  <!-- CSS files -->
+  <link rel="stylesheet" href="/template/css/app.css">
+  <link rel="stylesheet" href="/template/css/panels.css">
+  <link rel="stylesheet" href="/template/css/tabs.css">
+  <link rel="stylesheet" href="/template/css/tabs-fix.css">
+  <link rel="stylesheet" href="/template/css/responsive-fix.css">
+  <link rel="stylesheet" href="/template/css/thumbs.css">
+  <link rel="stylesheet" href="/template/css/images.css">
+  <link rel="stylesheet" href="/template/css/chatbox.css">
+  <link rel="stylesheet" href="/template/css/imageSearch.css">
+  <link rel="stylesheet" href="/template/css/search-button.css">
+  <link rel="stylesheet" href="/template/css/switch.css">
+  <link rel="stylesheet" href="/template/css/sidebar-fix.css">
+  <link rel="stylesheet" href="/template/css/video-frames-modal.css">
+  <link rel="stylesheet" href="/template/css/image_up.css">
+  <link rel="stylesheet" href="/template/css/loginbutton.css">
+</head>
+<body>
+  <div id="app" class="app">
+    <div id="hdr" class="top">
+      <div class="top-inner">
+        <div id="leftCol" class="left-col">
+          <!-- Header will be mounted here -->
+        </div>
+        <div id="rightCol" class="right-col">
+          <!-- Query area will be mounted here -->
+        </div>
+      </div>
+    </div>
+
+    <aside id="side" class="side">
+      <!-- Sidebar will be mounted here -->
+    </aside>
+    <main id="main" class="main">
+      <div id="panel-container" class="panel-container" style="display: none;">
+        <!-- Panels will be mounted here -->
+      </div>
+      <div id="tab-panels-container" class="tab-panels-container" style="display: none;">
+        <!-- Tab panels will be mounted here -->
+      </div>
+    </main>
+    
+    <!-- Chat Widget -->
+    <div class="chat-widget">
+      <div class="chat-button" id="chatButton">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 20" aria-hidden="true">
+          <rect x="3" y="4" width="18" height="13" rx="2" ry="5" fill="white"/>
+          <path d="M15 16h4v4l-4-4z" fill="white"/>
+        </svg>
+      </div>
+      <div class="chat-box" id="chatBox">
+        <div class="chat-header">
+          <h3>Chat Assistant</h3>
+          <button class="close-chat" id="closeChat">&times;</button>
+        </div>
+        <div class="chat-controls">
+          <select id="chatHistorySelect">
+            <option value="default">Default Chat</option>
+          </select>
+        </div>
+        <div class="chat-messages" id="chatMessages">
+          <!-- Messages will be added here -->
+        </div>
+        <div class="chat-input">
+          <input type="text" id="messageInput" placeholder="Type your message...">
+          <button id="sendMessage">➤</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <script type="module" src="/template/js/main.js?v=20250120030"></script>
+  <script type="module" src="/template/js/components/ChatSync.js"></script>
+</body>
+</html>

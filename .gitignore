@@ -1,0 +1,42 @@
+# Ignore Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+log_vdb.txt
+volumes/
+
+
+# Ignore all files in data directory and subdirectories
+data/*
+data/**/*
+
+# Keep the directory structure by not ignoring .gitkeep files
+!data/.gitkeep
+!data/**/
+!data/**/.gitkeep
+
+# Specifically ignore large data directories and their contents
+data/index_link/
+data/keyframe/
+data/index/dense/
+data/index/sparse/
+data/index/rerank/
+data/results/
+data/metadata/
+
+# Ignore specific file types that might contain large data
+*.bin
+*.json
+*.jpg
+*.jpeg
+*.png
+*.webp
+*.mp4
+*.avi
+*.mov
+
+# Keep specific configuration files if needed
+!data/metadata/fps_mapping.json
+!data/metadata/path_scene.json
+!realtime/package.json
