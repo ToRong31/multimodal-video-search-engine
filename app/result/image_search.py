@@ -12,7 +12,8 @@ class ImageSearch:
         self,
         clip_searcher: Optional[CLIPSearcher] = None,
         siglip2_searcher: Optional[SigLIP2Searcher] = None,
-        db_url: str = "http://milvus:19530",
+        db_url: str = "https://in01-cead85a4142c060.aws-us-west-2.vectordb.zillizcloud.com:19537",
+        db_token: str ="26eb62fb5801c195bc36b7c06061feed24c616d702d78bea7c43baabce9abc9a8702e76ac8c2e07979ae0757f4fe0f6111d45eca",
         topk_each: int = 100
     ):
         self.clip_searcher = clip_searcher
@@ -31,7 +32,8 @@ class ImageSearch:
         image: Optional[Image.Image] = None,
         model_name: str = "h14_quickgelu",
         collection_name: Optional[str] = None,
-        image_path: Optional[str] = None
+        image_path: Optional[str] = None,
+        db_token: str = "26eb62fb5801c195bc36b7c06061feed24c616d702d78bea7c43baabce9abc9a8702e76ac8c2e07979ae0757f4fe0f6111d45eca",
     ) -> Dict:
         if collection_name is None:
             collection_name = self.collections.get(model_name, model_name)
@@ -49,7 +51,8 @@ class ImageSearch:
                     image_path=image_path,
                     topk=self.topk_each,
                     collection_name=collection_name,
-                    milvus_uri=self.db_manager.milvus_uri,
+                    milvus_uri="https://in01-cead85a4142c060.aws-us-west-2.vectordb.zillizcloud.com:19537",
+                    milvus_token= db_token
                 )
             else:
                 # Handle CLIP search

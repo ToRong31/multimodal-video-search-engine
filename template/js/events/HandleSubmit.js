@@ -486,7 +486,7 @@ async function handleQuickSubmit() {
         
         // ✅ KHỞI TẠO CLIENT VỚI baseURL
         const client = new EventRetrievalClient({
-            baseURL: store.eventRetrievalBaseURL || "https://eventretrieval.oj.io.vn/api/v2",
+            baseURL: store.eventRetrievalBaseURL || "http://192.168.20.156:5601/api/v2",
             fetchImpl: fetch.bind(window)
         });
         
@@ -494,8 +494,8 @@ async function handleQuickSubmit() {
             // Nếu chưa có, thực hiện login
             console.log('🔐 Quick Submit: No sessionId found, logging in...');
             
-            const username = store.eventRetrievalUsername || "team052";
-            const password = store.eventRetrievalPassword || "ZnCTJuBWHU";
+            const username = store.eventRetrievalUsername || "team002";
+            const password = store.eventRetrievalPassword || "123321";
             
             const loginResponse = await client.login({ username, password });
             sessionId = loginResponse.sessionId;

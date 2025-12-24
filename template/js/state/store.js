@@ -18,9 +18,9 @@ export const store = {
   activePanels: [],      // Array of active panel names
   imageSearchResults: null,  // Array of image search results
 
-  eventRetrievalBaseURL:'https://eventretrieval.oj.io.vn/api/v2',
-  eventRetrievalUsername: 'team052', // Username for event retrieval 'team052'
-  eventRetrievalPassword: 'ZnCTJuBWHU', // Password for event retrieval 'ZnCTJuBWHU'
+  eventRetrievalBaseURL:'http://192.168.20.156:5601/api/v2',
+  eventRetrievalUsername: 'team002', // Username for event retrieval 'team052'
+  eventRetrievalPassword: '123321', // Password for event retrieval 'ZnCTJuBWHU'
   
 };
 

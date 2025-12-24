@@ -1046,7 +1046,13 @@ function showYouTubePreviewModal(watchUrl, meta = {}) {
   if (existing && existing.parentNode) existing.parentNode.removeChild(existing);
 
   const folderName = meta.folderName || '';
-  const videoPath = folderName ? `/data/video/${folderName}.mp4` : null;
+  
+  // Extract YouTube video ID from URL
+  let videoId = '';
+  if (watchUrl) {
+    const urlMatch = watchUrl.match(/[?&]v=([^&]+)/);
+    if (urlMatch) videoId = urlMatch[1];
+  }
 
   // Preserve focus to restore after closing
   const previousActiveElement = document.activeElement;
@@ -1111,27 +1117,6 @@ function showYouTubePreviewModal(watchUrl, meta = {}) {
   kisBtn.title = 'Submit KIS Mode';
   kisBtn.style.cssText = 'background:#667eea;color:#fff;border:0;border-radius:6px;padding:6px 12px;cursor:pointer;font-weight:600;';
 
-  // QA button
-  const qaBtn = document.createElement('button');
-  qaBtn.type = 'button';
-  qaBtn.textContent = 'QA';
-  qaBtn.title = 'Submit QA Mode';
-  qaBtn.style.cssText = 'background:#f5576c;color:#fff;border:0;border-radius:6px;padding:6px 12px;cursor:pointer;font-weight:600;';
-
-  // TRAKE button
-  const trakeBtn = document.createElement('button');
-  trakeBtn.type = 'button';
-  trakeBtn.textContent = 'TRAKE';
-  trakeBtn.title = 'Add current frame to TRAKE submission';
-  trakeBtn.style.cssText = 'background:#ff6e47;color:#fff;border:0;border-radius:6px;padding:6px 12px;cursor:pointer;font-weight:600;';
-
-  // Submit TRAKE button
-  const submitTrakeBtn = document.createElement('button');
-  submitTrakeBtn.type = 'button';
-  submitTrakeBtn.textContent = 'Submit TRAKE';
-  submitTrakeBtn.title = 'Submit selected frames';
-  submitTrakeBtn.style.cssText = 'background:#4bae4f;color:#fff;border:0;border-radius:4px;padding:12px 12px;cursor:pointer;font-weight:600;font-size:14px;';
-
   const closeBtn = document.createElement('button');
   closeBtn.type = 'button';
   closeBtn.textContent = 'Close';
@@ -1139,14 +1124,12 @@ function showYouTubePreviewModal(watchUrl, meta = {}) {
 
   btnRow.appendChild(addToChatBtn);
   btnRow.appendChild(kisBtn);
-  btnRow.appendChild(qaBtn);
-  btnRow.appendChild(trakeBtn);
   btnRow.appendChild(closeBtn);
   header.appendChild(btnRow);
 
   const body = document.createElement('div');
   
-  if (videoPath) {
+  if (videoId) {
     const timeInfo = document.createElement('div');
     timeInfo.style.cssText = 'margin:8px 0;color:#fff;font-size:13px;display:flex;justify-content:space-between;align-items:center';
 
@@ -1159,43 +1142,23 @@ function showYouTubePreviewModal(watchUrl, meta = {}) {
     timeInfo.appendChild(currentTimeDisplay);
     timeInfo.appendChild(frameInfo);
 
-    // ✅ VIDEO TAG - Control autoplay via JavaScript
+    // YouTube iframe embed
+    const startSeconds = Number.isFinite(meta.seconds) ? Math.floor(meta.seconds) : 0;
     body.innerHTML = `
       <div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:8px;background:#000">
-        <video 
-          id="mp4VideoPlayer" 
-          src="${videoPath}" 
-          controls 
-          preload="auto"
-          style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;object-fit:contain;"
-        >
-          Your browser does not support the video tag.
-        </video>
+        <iframe 
+          id="youtubePlayer" 
+          src="https://www.youtube.com/embed/${videoId}?start=${startSeconds}&autoplay=1&enablejsapi=1" 
+          frameborder="0" 
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+          allowfullscreen
+          style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"
+        ></iframe>
       </div>
     `;
     body.appendChild(timeInfo);
-    
-    // TRAKE frames display
-    const trakeFramesDisplay = document.createElement('div');
-    trakeFramesDisplay.className = 'trake-frames-display';
-    trakeFramesDisplay.style.cssText = 'margin-top:12px;padding:12px;background:rgb(26, 26, 26);border-radius:8px;display:none;border:2px solid rgb(255, 110, 71);';
-    trakeFramesDisplay.innerHTML = `
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-        <span style="font-weight:600;color:#ff6e47;">Selected Frames for TRAKE</span>
-        <div style="display:flex;gap:8px;align-items:center;">
-          <button class="clear-trake-frames" style="background:#e74c3c;color:#fff;border:0;border-radius:4px;padding:12px 12px;cursor:pointer;font-weight:600;font-size:14px;">Clear All</button>
-          <div class="trake-submit-container" style="display:none;"></div>
-        </div>
-      </div>
-      <div class="trake-frames-list" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
-    `;
-    body.appendChild(trakeFramesDisplay);
-    
-    // Add submitTrakeBtn to trakeFramesDisplay header
-    const trakeSubmitContainer = trakeFramesDisplay.querySelector('.trake-submit-container');
-    trakeSubmitContainer.appendChild(submitTrakeBtn);
   } else {
-    body.innerHTML = `<div style="padding:16px;text-align:center">Cannot load video. Video path not available.</div>`;
+    body.innerHTML = `<div style="padding:16px;text-align:center">Cannot load video. YouTube video ID not available.</div>`;
   }
 
   modal.appendChild(header);
@@ -1206,10 +1169,6 @@ function showYouTubePreviewModal(watchUrl, meta = {}) {
   overlay.appendChild(modal);
   document.body.appendChild(overlay);
   document.body.style.overflow = 'hidden';
-
-  // Array để lưu frames đã chọn cho TRAKE
-  let selectedTrakeFrames = [];
-
 
   // Minimal keyboard handler
   const isInteractiveEl = (el) => {
@@ -1229,7 +1188,7 @@ function showYouTubePreviewModal(watchUrl, meta = {}) {
   modal.addEventListener('keydown', spaceKeyHandler, true);
 
   // Close helpers
-  let videoPlayer = null;
+  let ytPlayer = null;
   let escHandler = null;
   let updateInterval = null;
   
@@ -1237,10 +1196,7 @@ function showYouTubePreviewModal(watchUrl, meta = {}) {
     try { modal.removeEventListener('keydown', spaceKeyHandler, true); } catch {}
     try { if (escHandler) document.removeEventListener('keydown', escHandler, true); } catch {}
     try { if (updateInterval) clearInterval(updateInterval); } catch {}
-    if (videoPlayer) {
-      try { videoPlayer.pause(); videoPlayer.src = ''; } catch {}
-      videoPlayer = null;
-    }
+    ytPlayer = null;
   };
 
   const remove = () => {
@@ -1255,195 +1211,37 @@ function showYouTubePreviewModal(watchUrl, meta = {}) {
   escHandler = (e) => { if (e.key === 'Escape') remove(); };
   document.addEventListener('keydown', escHandler, true);
   
-  // ✅ VIDEO PLAYER SETUP
-  const videoEl = body.querySelector('#mp4VideoPlayer');
-  if (videoEl) {
-    videoPlayer = videoEl;
-    window.currentVideoPlayer = videoPlayer;
+  // YouTube Player setup
+  const iframe = body.querySelector('#youtubePlayer');
+  if (iframe) {
+    // Store reference for getCurrentTime
+    ytPlayer = iframe;
+    window.currentYTPlayer = ytPlayer;
     
-    // ✅ AUTO UNMUTE AND SET VOLUME TO 100%
-    videoPlayer.muted = false;
-    videoPlayer.volume = 1.0;
-    
-    let hasAttemptedInitialSeek = false;
-    let isCurrentlySeeking = false; // ✅ NEW: Prevent concurrent seeks
-    
-    // ✅ ĐỊNH NGHĨA performSeekWithRetry BÊN NGOÀI - QUAN TRỌNG!
-    const performSeekWithRetry = (targetTime, retries = 3) => {
-      // ✅ PREVENT CONCURRENT SEEKS
-      if (isCurrentlySeeking) {
-        console.log('⏸️ Already seeking, skipping...');
-        return;
-      }
-      
-      if (retries <= 0) {
-        console.error('❌ Failed to seek after multiple attempts');
-        isCurrentlySeeking = false;
-        return;
-      }
-      
-      isCurrentlySeeking = true;
-      console.log(`⏰ Seeking to ${targetTime}s (retries left: ${retries})`);
-      
-      const wasPaused = videoPlayer.paused;
-      
-      // ✅ CHECK VIDEO READY STATE
-      if (videoPlayer.readyState < 2) {
-        console.warn('⚠️ Video not ready (readyState:', videoPlayer.readyState, '), waiting...');
-        
-        // ✅ SIMPLIFIED: Only wait for canplay once, no timeout
-        const handleCanPlay = () => {
-          videoPlayer.removeEventListener('canplay', handleCanPlay);
-          isCurrentlySeeking = false; // Reset flag
-          performSeekWithRetry(targetTime, retries);
-        };
-        videoPlayer.addEventListener('canplay', handleCanPlay, { once: true });
-        
-        return;
-      }
-      
-      // ✅ NO PAUSE NEEDED - HTML5 video can seek while playing
-      
-      try {
-        // ✅ CLAMP TIME
-        const clampedTime = Math.max(0, Math.min(targetTime, videoPlayer.duration || targetTime));
-        const initialTime = videoPlayer.currentTime;
-        
-        console.log(`📍 Seeking from ${initialTime.toFixed(2)}s to ${clampedTime.toFixed(2)}s`);
-        
-        // ✅ SET CURRENT TIME
-        videoPlayer.currentTime = clampedTime;
-        
-        // ✅ WAIT FOR SEEKED EVENT
-        const handleSeeked = () => {
-          const actualTime = videoPlayer.currentTime;
-          console.log('✅ Seeked event fired, time:', actualTime.toFixed(2));
-          
-          isCurrentlySeeking = false; // ✅ Reset flag
-          
-          // ✅ ENSURE PLAYING if autoplay is enabled
-          if (!wasPaused && videoPlayer.paused) {
-            videoPlayer.play().catch(err => console.warn('Play prevented:', err));
-          }
-        };
-        
-        videoPlayer.addEventListener('seeked', handleSeeked, { once: true });
-        
-        // ✅ REDUCED TIMEOUT - Only retry if really stuck
-        setTimeout(() => {
-          if (!isCurrentlySeeking) return; // Already completed
-          
-          videoPlayer.removeEventListener('seeked', handleSeeked);
-          
-          const actualTime = videoPlayer.currentTime;
-          const timeDiff = Math.abs(actualTime - clampedTime);
-          
-          console.log(`⏱️ After 1.5s: wanted ${clampedTime.toFixed(2)}s, got ${actualTime.toFixed(2)}s, diff: ${timeDiff.toFixed(2)}s`);
-          
-          if (timeDiff > 2) { // ✅ Increased threshold from 1 to 2 seconds
-            console.warn('⚠️ Seek incomplete, retrying...');
-            isCurrentlySeeking = false;
-            performSeekWithRetry(targetTime, retries - 1);
-          } else {
-            console.log('✅ Seek successful (close enough)');
-            isCurrentlySeeking = false;
-            // ✅ Ensure video is playing if it should be
-            if (!wasPaused && videoPlayer.paused) {
-              console.log('▶️ Resuming playback after seek');
-              videoPlayer.play().catch(err => console.warn('Play prevented:', err));
-            }
-          }
-        }, 1000); // ✅ Reduced to 1000ms for faster response
-        
-      } catch (err) {
-        console.error('❌ Seek error:', err);
-        isCurrentlySeeking = false;
-        
-        // Retry after delay
-        setTimeout(() => {
-          performSeekWithRetry(targetTime, retries - 1);
-        }, 500);
-      }
-    };
-    
-    // ✅ SETUP EVENT LISTENERS
-    videoPlayer.addEventListener('loadedmetadata', () => {
-      console.log('📊 Metadata loaded, duration:', videoPlayer.duration);
-      
-      const timeDisplay = body.querySelector('span');
-      const frameDisplay = body.querySelectorAll('span')[1];
-      const fps = (typeof store !== 'undefined' && store.fpsMapping && store.fpsMapping[meta.folderName]) ? store.fpsMapping[meta.folderName] : 30;
+    // Setup time display update
+    const timeDisplay = body.querySelector('span');
+    const frameDisplay = body.querySelectorAll('span')[1];
+    const fps = (typeof store !== 'undefined' && store.fpsMapping && store.fpsMapping[meta.folderName]) ? store.fpsMapping[meta.folderName] : 30;
 
-      updateInterval = setInterval(() => {
-        if (!document.body.contains(overlay)) { 
-          clearInterval(updateInterval); 
-          return; 
-        }
-        const currentTime = videoPlayer.currentTime || 0;
-        const currentFrame = Math.round(currentTime * fps);
-        if (timeDisplay) timeDisplay.textContent = formatTimeLabel(currentTime);
-        if (frameDisplay) frameDisplay.textContent = `Frame ${currentFrame} @ ${fps} FPS`;
-      }, 100);
-    });
-    
-    // ✅ USE 'loadeddata' INSTEAD OF 'canplay' - Fires only once when ready
-    videoPlayer.addEventListener('loadeddata', async () => {
-      console.log('▶️ Video loaded (readyState:', videoPlayer.readyState, ')');
-      
-      if (!hasAttemptedInitialSeek) {
-        hasAttemptedInitialSeek = true;
-        
-        const start = Number.isFinite(meta.seconds) ? Math.max(0, meta.seconds) : 0;
-        
-        if (start > 0) {
-          console.log('🎬 Seeking to:', start, 'before playing');
-          // ✅ Seek FIRST while paused (cleaner)
-          videoPlayer.currentTime = start;
-          
-          // ✅ Wait for seek to complete, then play
-          const seekComplete = new Promise(resolve => {
-            videoPlayer.addEventListener('seeked', () => {
-              console.log('✅ Initial seek complete, starting playback');
-              resolve();
-            }, { once: true });
-          });
-          
-          await seekComplete;
-          
-          // ✅ Now play from the correct position
-          videoPlayer.play().catch(err => {
-            console.warn('Autoplay prevented:', err);
-          });
-        } else {
-          // No seek needed, just play from start
-          videoPlayer.play().catch(err => {
-            console.warn('Autoplay prevented:', err);
-          });
-        }
+    // Since we can't easily access YouTube iframe's current time without the API loaded,
+    // we'll use a simplified approach with postMessage
+    updateInterval = setInterval(() => {
+      if (!document.body.contains(overlay)) { 
+        clearInterval(updateInterval); 
+        return; 
       }
-    }, { once: true }); // ✅ IMPORTANT: Fire only once
+      // This is a simplified version - for full control, implement YouTube IFrame API
+      // For now, just keep the display as is
+    }, 100);
     
-    videoPlayer.addEventListener('error', (e) => {
-      console.error('❌ Video error:', e);
-      const errorCode = videoPlayer.error?.code;
-      const errorMessages = {
-        1: 'MEDIA_ERR_ABORTED: Video loading aborted',
-        2: 'MEDIA_ERR_NETWORK: Network error',
-        3: 'MEDIA_ERR_DECODE: Video decoding failed',
-        4: 'MEDIA_ERR_SRC_NOT_SUPPORTED: Video format not supported'
-      };
-      
-      const displayError = errorMessages[errorCode] || 'Unknown error';
-      console.error('Video error details:', displayError, videoPath);
-    });
-    
-    // ✅ JUMP TO TIME BUTTON
+    // Jump to time button
     if (timeBtn && Number.isFinite(meta.seconds)) {
       timeBtn.addEventListener('click', (e) => { 
         e.preventDefault(); 
         e.stopPropagation(); 
-        console.log('🎯 Time button clicked, seeking to:', meta.seconds);
-        performSeekWithRetry(meta.seconds);
+        // Reload iframe with new start time
+        const startSeconds = Math.floor(meta.seconds);
+        iframe.src = `https://www.youtube.com/embed/${videoId}?start=${startSeconds}&autoplay=1&enablejsapi=1`;
       });
     }
   }
@@ -1452,23 +1250,23 @@ function showYouTubePreviewModal(watchUrl, meta = {}) {
   addToChatBtn.addEventListener('click', (e) => { 
     e.preventDefault(); 
     e.stopPropagation(); 
-    if (!videoPlayer) return;
     
-    const currentTime = videoPlayer.currentTime || 0;
+    // For YouTube player, we use the initial meta.seconds since we can't easily get current time from iframe
+    const currentTime = Number.isFinite(meta.seconds) ? meta.seconds : 0;
     const folderName = meta.folderName || '';
     
     const fps = (typeof store !== 'undefined' && store.fpsMapping && store.fpsMapping[folderName]) ? store.fpsMapping[folderName] : 30;
     const currentFrame = Math.round(currentTime * fps);
     const keyframeName = `keyframe_${currentFrame}`;
     
-    // ✅ THAY ĐỔI: Lấy thumbnail từ video thay vì YouTube
-    const imageUrl = `/api/image/${folderName}/${currentFrame}?method=keyframe`;
+    // Use YouTube thumbnail
+    const imageUrl = watchUrl ? `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg` : `/api/image/${folderName}/${currentFrame}?method=keyframe`;
     
     const originalText = addToChatBtn.textContent;
     addToChatBtn.textContent = 'Adding...';
     addToChatBtn.disabled = true;
     
-    // Capture frame and add to chat
+    // Add to chat
     if (window.ChatSync && typeof window.ChatSync.sendImageMessage === 'function') {
       const payload = {
         imageUrl: imageUrl,
@@ -1497,14 +1295,8 @@ function showYouTubePreviewModal(watchUrl, meta = {}) {
     }
   });
 
-  // XỬ LÝ KIS VÀ QA - SUBMIT TRỰC TIẾP
-  // XỬ LÝ KIS VÀ QA - SUBMIT TRỰC TIẾP
-  const handleSubmit = async (mode) => {
-    if (!videoPlayer) {
-      alert('Video player not ready');
-      return;
-    }
-    
+  // KIS Submit Handler
+  const handleKISSubmit = async () => {
     const folderName = meta.folderName;
     if (!folderName) {
       alert('Folder name not available');
@@ -1518,24 +1310,20 @@ function showYouTubePreviewModal(watchUrl, meta = {}) {
         fetchImpl: fetch.bind(window)
       });
       
-      // ✅ SỬ DỤNG sessionId TỪ STORE NẾU CÓ
       let sessionId = store.sessionId;
       
       if (!sessionId) {
-        // Nếu chưa có, thực hiện login
         const username = store.eventRetrievalUsername || "team052";
         const password = store.eventRetrievalPassword || "ZnCTJuBWHU";
         
         const loginResponse = await client.login({ username, password });
         sessionId = loginResponse.sessionId;
         
-        // Lưu lại
         store.sessionId = sessionId;
         localStorage.setItem('eventRetrieval_sessionId', sessionId);
         localStorage.setItem('eventRetrieval_loginTime', Date.now().toString());
         
-        // Update login button
-        refreshLoginButton();
+        if (typeof refreshLoginButton === 'function') refreshLoginButton();
       }
       
       if (!sessionId) {
@@ -1554,19 +1342,38 @@ function showYouTubePreviewModal(watchUrl, meta = {}) {
         throw new Error('No valid evaluation found');
       }
       
-      await submitToEventRetrieval(videoPlayer, folderName, mode, activeEval.id, sessionId);
+      // Calculate time in milliseconds for submission
+      const currentTime = Number.isFinite(meta.seconds) ? meta.seconds : 0;
+      const timeMs = Math.round(currentTime * 1000); // Convert seconds to milliseconds
+      
+      // Submit using KIS format: { mediaItemName, start, end } where start = end
+      const answers = [{
+        mediaItemName: folderName,
+        start: timeMs,
+        end: timeMs
+      }];
+      
+      console.log('📤 Submitting KIS:', { folderName, timeMs, evaluationId: activeEval.id });
+      
+      const response = await client.submitKIS({
+        evaluationId: activeEval.id,
+        session: sessionId,
+        answers: answers
+      });
+      
+      console.log('✅ KIS submission response:', response);
+      alert('KIS submission successful!');
       
     } catch (error) {
-      console.error('❌ Submit error:', error);
+      console.error('❌ KIS Submit error:', error);
       
-      // ✅ NẾU LỖI 401, XÓA sessionId
       if (error.status === 401 || error.message?.includes('Unauthorized')) {
         store.sessionId = null;
         localStorage.removeItem('eventRetrieval_sessionId');
-        refreshLoginButton();
+        if (typeof refreshLoginButton === 'function') refreshLoginButton();
         alert('Session expired. Please login again.');
       } else {
-        alert(`Failed to submit: ${error.message}`);
+        alert(`Failed to submit KIS: ${error.message}`);
       }
     }
   };
@@ -1574,183 +1381,17 @@ function showYouTubePreviewModal(watchUrl, meta = {}) {
   kisBtn.addEventListener('click', (e) => {
     e.preventDefault();
     e.stopPropagation();
-    handleSubmit('kis');
+    handleKISSubmit();
   });
 
-  qaBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    handleSubmit('qa');
+  // Hover effect for KIS button
+  kisBtn.addEventListener('mouseenter', () => {
+    kisBtn.style.transform = 'scale(1.05)';
+    kisBtn.style.boxShadow = '0 4px 12px rgba(0,0,0,0.3)';
   });
-
-  // XỬ LÝ TRAKE - ADD FRAME VÀO LIST
-  trakeBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    if (!videoPlayer) {
-      alert('Video player not ready');
-      return;
-    }
-    
-    const currentTime = videoPlayer.currentTime || 0;
-    const folderName = meta.folderName || '';
-    const fps = store.fpsMapping?.[folderName] || 30;
-    const currentFrame = Math.round(currentTime * fps);
-    
-    if (selectedTrakeFrames.includes(currentFrame)) {
-      alert(`Frame ${currentFrame} already added!`);
-      return;
-    }
-    
-    selectedTrakeFrames.push(currentFrame);
-    
-    const trakeFramesDisplay = body.querySelector('.trake-frames-display');
-    const trakeFramesList = body.querySelector('.trake-frames-list');
-    
-    if (trakeFramesDisplay) {
-      trakeFramesDisplay.style.display = 'block';
-    }
-    
-    if (trakeFramesList) {
-      const frameTag = document.createElement('div');
-      frameTag.style.cssText = 'background:#ff6e47;color:#fff;padding:6px 12px;border-radius:6px;display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;';
-      frameTag.innerHTML = `
-        <span>Frame ${currentFrame}</span>
-        <button onclick="this.parentElement.remove(); window.removeTrakeFrame(${currentFrame})" style="background:transparent;border:0;color:#fff;cursor:pointer;font-size:16px;line-height:1;padding:0;">×</button>
-      `;
-      trakeFramesList.appendChild(frameTag);
-    }
-    
-    if (selectedTrakeFrames.length >= 2) {
-      const trakeSubmitContainer = body.querySelector('.trake-submit-container');
-      if (trakeSubmitContainer) {
-        trakeSubmitContainer.style.display = 'block';
-      }
-      submitTrakeBtn.textContent = `Submit TRAKE (${selectedTrakeFrames.length} frames)`;
-    }
-  });
-
-  // Global function để remove frame
-  window.removeTrakeFrame = (frameNumber) => {
-    const index = selectedTrakeFrames.indexOf(frameNumber);
-    if (index > -1) {
-      selectedTrakeFrames.splice(index, 1);
-    }
-    
-    if (selectedTrakeFrames.length >= 2) {
-      const trakeSubmitContainer = body.querySelector('.trake-submit-container');
-      if (trakeSubmitContainer) {
-        trakeSubmitContainer.style.display = 'block';
-      }
-      submitTrakeBtn.textContent = `Submit TRAKE (${selectedTrakeFrames.length} frames)`;
-    } else {
-      const trakeSubmitContainer = body.querySelector('.trake-submit-container');
-      if (trakeSubmitContainer) {
-        trakeSubmitContainer.style.display = 'none';
-      }
-    }
-    
-    if (selectedTrakeFrames.length === 0) {
-      const trakeFramesDisplay = body.querySelector('.trake-frames-display');
-      if (trakeFramesDisplay) {
-        trakeFramesDisplay.style.display = 'none';
-      }
-    }
-  };
-
-  // Clear all frames button
-  body.querySelector('.clear-trake-frames')?.addEventListener('click', () => {
-    selectedTrakeFrames = [];
-    const trakeFramesList = body.querySelector('.trake-frames-list');
-    if (trakeFramesList) {
-      trakeFramesList.innerHTML = '';
-    }
-    const trakeSubmitContainer = body.querySelector('.trake-submit-container');
-    if (trakeSubmitContainer) {
-      trakeSubmitContainer.style.display = 'none';
-    }
-    const trakeFramesDisplay = body.querySelector('.trake-frames-display');
-    if (trakeFramesDisplay) {
-      trakeFramesDisplay.style.display = 'none';
-    }
-  });
-
-  // SUBMIT TRAKE BUTTON
-  submitTrakeBtn.addEventListener('click', async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    if (selectedTrakeFrames.length < 2) {
-      alert('Please add at least 2 frames before submitting');
-      return;
-    }
-    
-    const folderName = meta.folderName;
-    if (!folderName) {
-      alert('Folder name not available');
-      return;
-    }
-    
-    try {
-      const { EventRetrievalClient } = await import('./api/eventretrieval.js');
-      const client = new EventRetrievalClient({
-        baseURL: store.eventRetrievalBaseURL || "http://localhost:18080/api/v2",
-        fetchImpl: fetch.bind(window)
-      });
-      
-      const username = store.eventRetrievalUsername || "user";
-      const password = store.eventRetrievalPassword || "123456";
-      
-      const loginResponse = await client.login({ username, password });
-      const sessionId = loginResponse.sessionId;
-      
-      if (!sessionId) {
-        throw new Error('No sessionId in login response');
-      }
-      
-      const evaluations = await client.listEvaluations({ session: sessionId });
-      
-      if (!Array.isArray(evaluations) || evaluations.length === 0) {
-        throw new Error('No evaluations found');
-      }
-      
-      const activeEval = evaluations.find(e => e.status === "CREATED" || e.status === "ACTIVE") || evaluations[0];
-      
-      if (!activeEval || !activeEval.id) {
-        throw new Error('No valid evaluation found');
-      }
-      
-      await submitToEventRetrievalWithFrames(folderName, selectedTrakeFrames, activeEval.id, sessionId);
-      
-      // Clear after successful submission
-      selectedTrakeFrames = [];
-      const trakeFramesList = body.querySelector('.trake-frames-list');
-      if (trakeFramesList) {
-        trakeFramesList.innerHTML = '';
-      }
-      submitTrakeBtn.style.display = 'none';
-      const trakeFramesDisplay = body.querySelector('.trake-frames-display');
-      if (trakeFramesDisplay) {
-        trakeFramesDisplay.style.display = 'none';
-      }
-      
-    } catch (error) {
-      console.error('❌ TRAKE Submit error:', error);
-      alert(`Failed to submit TRAKE: ${error.message}`);
-    }
-  });
-
-  // Hover effects for submit buttons
-  [kisBtn, qaBtn, trakeBtn].forEach(btn => {
-    btn.addEventListener('mouseenter', () => {
-      btn.style.transform = 'scale(1.05)';
-      btn.style.boxShadow = '0 4px 12px rgba(0,0,0,0.3)';
-    });
-    btn.addEventListener('mouseleave', () => {
-      btn.style.transform = 'scale(1)';
-      btn.style.boxShadow = 'none';
-    });
+  kisBtn.addEventListener('mouseleave', () => {
+    kisBtn.style.transform = 'scale(1)';
+    kisBtn.style.boxShadow = 'none';
   });
 
   modal.setAttribute('tabindex', '-1');

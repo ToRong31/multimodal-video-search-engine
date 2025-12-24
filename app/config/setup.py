@@ -21,7 +21,7 @@ clip = CLIPSearcher(milvus_uri="http://milvus:19530")
 beit3 = BEiT3Searcher(milvus_uri="http://milvus:19530")
 # beit3.load_model(device="cuda")
 
-siglip2 = SigLIP2Searcher(milvus_uri="http://milvus:19530")
+siglip2 = SigLIP2Searcher(milvus_uri="https://in01-cead85a4142c060.aws-us-west-2.vectordb.zillizcloud.com:19537", milvus_token="26eb62fb5801c195bc36b7c06061feed24c616d702d78bea7c43baabce9abc9a8702e76ac8c2e07979ae0757f4fe0f6111d45eca")
 # siglip2.load_path_id_map()
 siglip2.load_model(device="cuda")
 

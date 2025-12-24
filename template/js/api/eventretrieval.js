@@ -1,6 +1,6 @@
 // eventretrieval.js
 export class EventRetrievalClient {
-  constructor({ baseURL = "https://eventretrieval.oj.io.vn/api/v2", fetchImpl } = {}) {
+  constructor({ baseURL = "http://192.168.20.156:5601/api/v2", fetchImpl } = {}) {
     this.baseURL = baseURL.replace(/\/+$/, "");
     this.fetch = fetchImpl || (typeof fetch !== "undefined" ? fetch : null);
     if (!this.fetch) throw new Error("No fetch implementation found.");

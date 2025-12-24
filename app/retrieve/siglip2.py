@@ -1,6 +1,7 @@
 import json
 import os
 import pickle
+import time
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 from typing import List, Optional
@@ -89,6 +90,9 @@ class SigLIP2Searcher:
         self.model = None
         self.processor = None
 
+
+        self._client = None
+        self._client_key = None  # (uri, token)
         self.milvus_uri = milvus_uri or url
         self.milvus_token = milvus_token
 
@@ -351,12 +355,30 @@ class SigLIP2Searcher:
 
         return np.stack(features, axis=0)
 
-    def _get_milvus(self, milvus_uri: Optional[str] = None, milvus_token: Optional[str] = None) -> MilvusClient:
-        uri = milvus_uri or self.milvus_uri or "http://localhost:19530"
+    def _get_milvus(self, milvus_uri=None, milvus_token=None) -> MilvusClient:
+        uri = milvus_uri or self.milvus_uri
         token = milvus_token or self.milvus_token
-        if token:
-            return MilvusClient(uri=uri, token=token)
-        return MilvusClient(uri=uri)
+        key = (uri, token)
+
+        # reuse client nếu cùng endpoint
+        if self._client is not None and self._client_key == key:
+            return self._client
+
+        delays = [2, 4, 8, 16, 32, 60]
+        last_exc = None
+        for d in delays:
+            try:
+                c = MilvusClient(uri=uri, token=token) if token else MilvusClient(uri=uri)
+                # health check để đảm bảo cluster READY sau resume
+                c.list_collections()
+                self._client = c
+                self._client_key = key
+                return c
+            except Exception as e:
+                last_exc = e
+                time.sleep(d)
+
+        raise RuntimeError(f"Milvus not ready / cannot connect. Last error: {last_exc}")
 
     def text_search(
         self,
@@ -368,7 +390,28 @@ class SigLIP2Searcher:
     ):
 
         vec = self._encode_text([query])[0]  # (D,)
-        client = self._get_milvus(milvus_uri, milvus_token)
+        try:
+            client = self._get_milvus(milvus_uri, milvus_token)
+        except Exception:
+        # reconnect fresh rồi thử lại 1 lần
+            self.reset_milvus()
+            client = self._get_milvus(milvus_uri, milvus_token)
+            res = client.search(
+                collection_name=collection_name,
+                data=[vec.tolist()],
+                anns_field="vector",
+                limit=int(topk),
+                search_params={"metric_type": "COSINE"},
+            )
+            hits = res[0] if isinstance(res, list) else res
+            out = []
+            for h in hits:
+                out.append({
+                    "id": h.get("id") if isinstance(h, dict) else getattr(h, "id", None),
+                    "score": float(h.get("distance") if isinstance(h, dict) else getattr(h, "distance", 0.0)),
+                })
+            return out
+        
         res = client.search(
             collection_name=collection_name,
             data=[vec.tolist()],
@@ -384,6 +427,7 @@ class SigLIP2Searcher:
                 "score": float(h.get("distance") if isinstance(h, dict) else getattr(h, "distance", 0.0)),
             })
         return out
+    
 
     def img_search(
         self,

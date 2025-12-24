@@ -9,6 +9,7 @@ function renderOptions(container, list, sectionKey, isTemporal) {
   container.innerHTML = '';
   list.forEach((label, idx) => {
     const baseId = `${sectionKey}_${idx}`;
+    const isSigLIP2 = label === 'SigLIP2';
     
     if (isTemporal) {
       // Hoàn toàn thay đổi cách tạo element cho temporal mode
@@ -18,12 +19,19 @@ function renderOptions(container, list, sectionKey, isTemporal) {
       optionEl.setAttribute('data-model-idx', idx);
       optionEl.setAttribute('data-model-name', label);
       
+      // Disable non-SigLIP2 models
+      if (!isSigLIP2) {
+        optionEl.style.opacity = '0.5';
+        optionEl.style.cursor = 'not-allowed';
+        optionEl.style.pointerEvents = 'none';
+      }
+      
       // Phần nhãn model với wrapper để match với regular mode
       const labelWrapper = document.createElement('label');
       labelWrapper.style.display = 'flex';
       labelWrapper.style.gap = '10px';
       labelWrapper.style.alignItems = 'flex-end';
-      labelWrapper.style.cursor = 'pointer';
+      labelWrapper.style.cursor = isSigLIP2 ? 'pointer' : 'not-allowed';
       labelWrapper.style.width = '100%';
       labelWrapper.style.fontSize = '18px';
       
@@ -44,10 +52,16 @@ function renderOptions(container, list, sectionKey, isTemporal) {
         checkboxInput.type = 'checkbox';
         checkboxInput.id = checkboxId;
         checkboxInput.setAttribute('data-index', i);
+        checkboxInput.checked = isSigLIP2; // Auto-check SigLIP2
+        checkboxInput.disabled = !isSigLIP2; // Disable non-SigLIP2
         
         // Đảm bảo sự kiện click trên checkbox không bubble lên .option
         checkboxInput.addEventListener('click', (e) => {
           e.stopPropagation();
+          // Prevent unchecking SigLIP2
+          if (isSigLIP2) {
+            e.target.checked = true;
+          }
         });
         
         const checkboxWrapper = document.createElement('div');
@@ -62,34 +76,54 @@ function renderOptions(container, list, sectionKey, isTemporal) {
       optionEl.appendChild(rightSpan);
       
       // Thêm sự kiện click trực tiếp vào element (không dùng event delegation)
-      optionEl.addEventListener('click', (e) => {
-        // Chỉ xử lý nếu click không phải trực tiếp trên checkbox
-        if (e.target.tagName !== 'INPUT') {
-          const checkboxes = optionEl.querySelectorAll('input[type="checkbox"]');
-          if (checkboxes.length > 0) {
-            const allChecked = Array.from(checkboxes).every(c => c.checked);
-            const newState = !allChecked;
-            
-            // Set trạng thái mới cho tất cả checkboxes
+      if (isSigLIP2) {
+        optionEl.addEventListener('click', (e) => {
+          // Chỉ xử lý nếu click không phải trực tiếp trên checkbox
+          if (e.target.tagName !== 'INPUT') {
+            const checkboxes = optionEl.querySelectorAll('input[type="checkbox"]');
+            // SigLIP2 always stays checked
             checkboxes.forEach(checkbox => {
-              checkbox.checked = newState;
-              // Kích hoạt sự kiện change
+              checkbox.checked = true;
               const event = new Event('change', { bubbles: true });
               checkbox.dispatchEvent(event);
             });
-            
-            console.log(`Model ${label}: Set all checkboxes to ${newState ? 'checked' : 'unchecked'}`);
           }
-        }
-      });
+        });
+      }
       
       container.appendChild(optionEl);
     } else {
-      container.insertAdjacentHTML('beforeend', `
-        <div class="option"><label for="${baseId}">
-          <input type="checkbox" id="${baseId}" /> ${label}
-        </label></div>
-      `);
+      // Regular mode (General)
+      const optionDiv = document.createElement('div');
+      optionDiv.className = 'option';
+      
+      if (!isSigLIP2) {
+        optionDiv.style.opacity = '0.5';
+        optionDiv.style.cursor = 'not-allowed';
+        optionDiv.style.pointerEvents = 'none';
+      }
+      
+      const labelEl = document.createElement('label');
+      labelEl.setAttribute('for', baseId);
+      labelEl.style.cursor = isSigLIP2 ? 'pointer' : 'not-allowed';
+      
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.id = baseId;
+      checkbox.checked = isSigLIP2; // Auto-check SigLIP2
+      checkbox.disabled = !isSigLIP2; // Disable non-SigLIP2
+      
+      // Prevent unchecking SigLIP2
+      if (isSigLIP2) {
+        checkbox.addEventListener('click', (e) => {
+          e.target.checked = true;
+        });
+      }
+      
+      labelEl.appendChild(checkbox);
+      labelEl.appendChild(document.createTextNode(' ' + label));
+      optionDiv.appendChild(labelEl);
+      container.appendChild(optionDiv);
     }
   });
 }
@@ -234,8 +268,14 @@ export function mountSidebar(root, { isTemporal, isTranslate=true}) {
     if (e.target.closest('label') || (e.target.tagName === 'INPUT' && e.target.type === 'checkbox')) return;
     
     const checkbox = row.querySelector('input[type="checkbox"]');
-    if (checkbox) {
-      checkbox.checked = !checkbox.checked;
+    if (checkbox && !checkbox.disabled) {
+      // Prevent unchecking if it's SigLIP2
+      const label = row.textContent.trim();
+      if (label === 'SigLIP2') {
+        checkbox.checked = true;
+      } else {
+        checkbox.checked = !checkbox.checked;
+      }
       const event = new Event('change', { bubbles: true });
       checkbox.dispatchEvent(event);
     }
