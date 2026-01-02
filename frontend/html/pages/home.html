@@ -1,0 +1,148 @@
+<div class="home-page">
+    <div class="container">
+        <h1 class="page-title">Video Search System</h1>
+        
+        <!-- Search Modes -->
+        <div class="search-modes">
+            <button class="mode-btn active" data-mode="single">Single Query</button>
+            <button class="mode-btn" data-mode="temporal">Temporal Query</button>
+            <button class="mode-btn" data-mode="image">Image Search</button>
+        </div>
+
+        <!-- Single Query Search -->
+        <div class="search-section" id="single-search">
+            <div class="search-form">
+                <h2>Text Search</h2>
+                <input type="text" id="single-query" class="search-input" placeholder="Enter your query...">
+                
+                <div class="options-group">
+                    <h3>OCR/ASR Options</h3>
+                    <input type="text" id="single-ocr" class="search-input" placeholder="OCR text (optional)">
+                    <input type="text" id="single-asr" class="search-input" placeholder="ASR text (optional)">
+                </div>
+
+                <div class="options-group">
+                    <h3>Select Models</h3>
+                    <div class="checkbox-grid">
+                        <label><input type="checkbox" class="model-checkbox" data-model="cliph14"> CLIP H/14</label>
+                        <label><input type="checkbox" class="model-checkbox" data-model="clipbigg14"> CLIP BigG/14</label>
+                        <label><input type="checkbox" class="model-checkbox" data-model="imagecap"> Image Caption</label>
+                        <label><input type="checkbox" class="model-checkbox" data-model="beit3"> BEiT3</label>
+                        <label><input type="checkbox" class="model-checkbox" data-model="siglip2" checked> SigLip2</label>
+                        <label><input type="checkbox" class="model-checkbox" data-model="google"> Google Search</label>
+                    </div>
+                </div>
+
+                <div class="options-group">
+                    <label><input type="checkbox" id="use-trans" checked> Use Translation</label>
+                </div>
+
+                <button class="search-btn" id="btn-single-search">Search</button>
+            </div>
+        </div>
+
+        <!-- Temporal Query Search -->
+        <div class="search-section hidden" id="temporal-search">
+            <div class="search-form">
+                <h2>Temporal Search (3 Queries)</h2>
+                
+                <div class="temporal-queries">
+                    <div class="query-block">
+                        <h3>Query 1 (Before)</h3>
+                        <input type="text" class="temporal-query" data-index="0" placeholder="First event...">
+                        <input type="text" class="temporal-ocr" data-index="0" placeholder="OCR (optional)">
+                        <div class="checkbox-grid">
+                            <label><input type="checkbox" class="temp-cliph14" data-index="0"> CLIP H/14</label>
+                            <label><input type="checkbox" class="temp-clipbigg14" data-index="0"> CLIP BigG/14</label>
+                            <label><input type="checkbox" class="temp-imagecap" data-index="0"> Image Caption</label>
+                            <label><input type="checkbox" class="temp-beit3" data-index="0"> BEiT3</label>
+                            <label><input type="checkbox" class="temp-siglip2" data-index="0" checked> SigLip2</label>
+                            <label><input type="checkbox" class="temp-google" data-index="0"> Google</label>
+                        </div>
+                    </div>
+
+                    <div class="query-block">
+                        <h3>Query 2 (During)</h3>
+                        <input type="text" class="temporal-query" data-index="1" placeholder="Second event...">
+                        <input type="text" class="temporal-ocr" data-index="1" placeholder="OCR (optional)">
+                        <div class="checkbox-grid">
+                            <label><input type="checkbox" class="temp-cliph14" data-index="1"> CLIP H/14</label>
+                            <label><input type="checkbox" class="temp-clipbigg14" data-index="1"> CLIP BigG/14</label>
+                            <label><input type="checkbox" class="temp-imagecap" data-index="1"> Image Caption</label>
+                            <label><input type="checkbox" class="temp-beit3" data-index="1"> BEiT3</label>
+                            <label><input type="checkbox" class="temp-siglip2" data-index="1" checked> SigLip2</label>
+                            <label><input type="checkbox" class="temp-google" data-index="1"> Google</label>
+                        </div>
+                    </div>
+
+                    <div class="query-block">
+                        <h3>Query 3 (After)</h3>
+                        <input type="text" class="temporal-query" data-index="2" placeholder="Third event...">
+                        <input type="text" class="temporal-ocr" data-index="2" placeholder="OCR (optional)">
+                        <div class="checkbox-grid">
+                            <label><input type="checkbox" class="temp-cliph14" data-index="2"> CLIP H/14</label>
+                            <label><input type="checkbox" class="temp-clipbigg14" data-index="2"> CLIP BigG/14</label>
+                            <label><input type="checkbox" class="temp-imagecap" data-index="2"> Image Caption</label>
+                            <label><input type="checkbox" class="temp-beit3" data-index="2"> BEiT3</label>
+                            <label><input type="checkbox" class="temp-siglip2" data-index="2" checked> SigLip2</label>
+                            <label><input type="checkbox" class="temp-google" data-index="2"> Google</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="options-group">
+                    <input type="text" id="temporal-asr" class="search-input" placeholder="ASR text (optional)">
+                </div>
+
+                <div class="options-group">
+                    <label><input type="checkbox" id="use-trans-temporal" checked> Use Translation</label>
+                </div>
+
+                <button class="search-btn" id="btn-temporal-search">Search Temporal</button>
+            </div>
+        </div>
+
+        <!-- Image Search -->
+        <div class="search-section hidden" id="image-search">
+            <div class="search-form">
+                <h2>Image Search</h2>
+                <p>Upload an image or paste from clipboard</p>
+                
+                <div class="image-upload-area" id="image-drop-zone">
+                    <p>Drop image here or click to upload</p>
+                    <input type="file" id="image-file-input" accept="image/*" style="display: none;">
+                </div>
+
+                <div class="uploaded-image" id="uploaded-image-preview" style="display: none;">
+                    <img id="preview-img" alt="Preview">
+                    <button class="remove-btn" id="remove-image">×</button>
+                </div>
+
+                <div class="options-group">
+                    <label>Model:</label>
+                    <select id="image-model">
+                        <option value="siglip2">SigLip2</option>
+                        <option value="cliph14">CLIP H/14</option>
+                        <option value="beit3">BEiT3</option>
+                    </select>
+                </div>
+
+                <button class="search-btn" id="btn-image-search">Search by Image</button>
+            </div>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div class="loading" id="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>Searching...</p>
+        </div>
+
+        <!-- Results -->
+        <div class="results-section" id="results-section" style="display: none;">
+            <h2>Search Results</h2>
+            <div class="results-grid" id="results-grid">
+                <!-- Results will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
