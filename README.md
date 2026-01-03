@@ -138,8 +138,4 @@ MIT License.
 
 ---
 
-## Contact
 
-Project Owner: Trong Hoang  
-Email: tronghph@gmail.com  
-Course: CS336 – Multimedia Information Retrieval
