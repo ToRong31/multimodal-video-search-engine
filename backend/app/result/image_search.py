@@ -12,14 +12,33 @@ class ImageSearch:
         self,
         clip_searcher: Optional[CLIPSearcher] = None,
         siglip2_searcher: Optional[SigLIP2Searcher] = None,
-        db_url: str = "https://in01-cead85a4142c060.aws-us-west-2.vectordb.zillizcloud.com:19537",
-        db_token: str ="26eb62fb5801c195bc36b7c06061feed24c616d702d78bea7c43baabce9abc9a8702e76ac8c2e07979ae0757f4fe0f6111d45eca",
+        db_url: Optional[str] = None,
+        db_token: Optional[str] = None,
         topk_each: int = 100
     ):
         self.clip_searcher = clip_searcher
         self.siglip2_searcher = siglip2_searcher
-        self.db_manager = DatabaseManager(db_url)
+        self.db_manager = DatabaseManager(db_url, db_token)
         self.topk_each = topk_each
+        
+        # Store db credentials for searches
+        if db_url is None:
+            try:
+                from app.config.settings import MILVUS_URI
+                self.db_url = MILVUS_URI
+            except ImportError:
+                self.db_url = "http://milvus:19530"
+        else:
+            self.db_url = db_url
+            
+        if db_token is None:
+            try:
+                from app.config.settings import MILVUS_TOKEN
+                self.db_token = MILVUS_TOKEN
+            except ImportError:
+                self.db_token = None
+        else:
+            self.db_token = db_token
         
         self.collections = {
             "h14_quickgelu": "h14_quickgelu",
@@ -33,7 +52,6 @@ class ImageSearch:
         model_name: str = "h14_quickgelu",
         collection_name: Optional[str] = None,
         image_path: Optional[str] = None,
-        db_token: str = "26eb62fb5801c195bc36b7c06061feed24c616d702d78bea7c43baabce9abc9a8702e76ac8c2e07979ae0757f4fe0f6111d45eca",
     ) -> Dict:
         if collection_name is None:
             collection_name = self.collections.get(model_name, model_name)
@@ -51,8 +69,8 @@ class ImageSearch:
                     image_path=image_path,
                     topk=self.topk_each,
                     collection_name=collection_name,
-                    milvus_uri="https://in01-cead85a4142c060.aws-us-west-2.vectordb.zillizcloud.com:19537",
-                    milvus_token= db_token
+                    milvus_uri=self.db_url,
+                    milvus_token=self.db_token
                 )
             else:
                 # Handle CLIP search

@@ -61,12 +61,13 @@ class BEiT3Searcher:
                 t_cls = F.normalize(t, dim=-1)
             return v_cls, t_cls
 
-    def __init__(self, repo_id: str = "Quintu/beit3", milvus_uri: Optional[str] = None, url: Optional[str] = None):
+    def __init__(self, repo_id: str = "Quintu/beit3", milvus_uri: Optional[str] = None, milvus_token: Optional[str] = None, url: Optional[str] = None):
         self.repo_id = repo_id
         self.device = torch.device("cpu")
         self.model: Optional[nn.Module] = None
         self.tokenizer: Optional[XLMRobertaTokenizer] = None
         self.milvus_uri = milvus_uri or url
+        self.milvus_token = milvus_token
         self.image_transform = transforms.Compose([
             transforms.Resize(384, interpolation=InterpolationMode.BICUBIC),
             transforms.CenterCrop(384),
@@ -130,16 +131,21 @@ class BEiT3Searcher:
             v, _ = self.model(image=batch)
         return v.float().cpu().numpy()  # (B, 1024), L2-normalized
 
-    def _get_milvus(self, milvus_uri: Optional[str]) -> MilvusClient:
-        return MilvusClient(uri=milvus_uri or self.milvus_uri or "http://localhost:19530")
+    def _get_milvus(self, milvus_uri: Optional[str] = None, milvus_token: Optional[str] = None) -> MilvusClient:
+        uri = milvus_uri or self.milvus_uri or "http://localhost:19530"
+        token = milvus_token or self.milvus_token
+        if token:
+            return MilvusClient(uri=uri, token=token)
+        return MilvusClient(uri=uri)
 
     def text_search(
         self,
         query: str,
         topk: int = 100,
         collection_name: str = "beit3",
+        milvus_token: Optional[str] = None,
     ) -> List[dict]:
-        client = self._get_milvus(self.milvus_uri)
+        client = self._get_milvus(self.milvus_uri, milvus_token)
 
         vec = self.encode_text([query])[0]  # (1024,)
         res = client.search(

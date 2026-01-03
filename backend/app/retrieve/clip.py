@@ -14,9 +14,10 @@ import numpy as np
 from typing import Optional
 
 class CLIPSearcher:
-    def __init__(self, milvus_uri: Optional[str] = None, url: Optional[str] = None):
+    def __init__(self, milvus_uri: Optional[str] = None, milvus_token: Optional[str] = None, url: Optional[str] = None):
         self.models = {}
         self.milvus_uri = milvus_uri or url
+        self.milvus_token = milvus_token
 
     def load_model(self, name: str, device: str = "cpu"):
         if name == "h14_quickgelu":
@@ -58,14 +59,18 @@ class CLIPSearcher:
         x = x / np.linalg.norm(x, axis=1, keepdims=True)
         return x[0]
 
-    def _get_milvus(self, milvus_uri: Optional[str]) -> MilvusClient:
-        return MilvusClient(uri=milvus_uri or self.milvus_uri or "http://localhost:19530")
+    def _get_milvus(self, milvus_uri: Optional[str] = None, milvus_token: Optional[str] = None) -> MilvusClient:
+        uri = milvus_uri or self.milvus_uri or "http://localhost:19530"
+        token = milvus_token or self.milvus_token
+        if token:
+            return MilvusClient(uri=uri, token=token)
+        return MilvusClient(uri=uri)
 
-    def text_search(self, model_name: str, topk: int, query: str, collection_name: str):
+    def text_search(self, model_name: str, topk: int, query: str, collection_name: str, milvus_token: Optional[str] = None):
         if model_name not in self.models:
             raise ValueError(f"Model '{model_name}' not loaded")
         vec = self._encode_text(self.models[model_name], query)
-        client = self._get_milvus(self.milvus_uri)
+        client = self._get_milvus(self.milvus_uri, milvus_token)
         res = client.search(
             collection_name=collection_name,
             data=[vec.astype(np.float32).tolist()],
@@ -82,11 +87,11 @@ class CLIPSearcher:
             })
         return out
 
-    def img_search(self, model_name: str, topk: int, image: Image.Image, collection_name: str):
+    def img_search(self, model_name: str, topk: int, image: Image.Image, collection_name: str, milvus_token: Optional[str] = None):
         if model_name not in self.models:
             raise ValueError(f"Model '{model_name}' not loaded")
         vec = self._encode_image(self.models[model_name], image)
-        client = self._get_milvus(self.milvus_uri)
+        client = self._get_milvus(self.milvus_uri, milvus_token)
         res = client.search(
             collection_name=collection_name,
             data=[vec.astype(np.float32).tolist()],

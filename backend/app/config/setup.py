@@ -12,16 +12,18 @@ from app.retrieve.beit3 import BEiT3Searcher
 from app.retrieve.siglip2 import SigLIP2Searcher
 from app.retrieve.ocr_asr_ic import ElasticSearcher
 from app.retrieve.google import GoogleSearcher
+from app.config.settings import MILVUS_URI, MILVUS_TOKEN
 
 
-clip = CLIPSearcher(milvus_uri="http://milvus:19530")
+# All searchers now use Milvus Cloud
+clip = CLIPSearcher(milvus_uri=MILVUS_URI, milvus_token=MILVUS_TOKEN)
 # clip.load_model("bigg14_datacomp", device="cpu")
 # clip.load_model("h14_quickgelu", device="cuda")
 
-beit3 = BEiT3Searcher(milvus_uri="http://milvus:19530")
+beit3 = BEiT3Searcher(milvus_uri=MILVUS_URI, milvus_token=MILVUS_TOKEN)
 # beit3.load_model(device="cuda")
 
-siglip2 = SigLIP2Searcher(milvus_uri="https://in01-cead85a4142c060.aws-us-west-2.vectordb.zillizcloud.com:19537", milvus_token="26eb62fb5801c195bc36b7c06061feed24c616d702d78bea7c43baabce9abc9a8702e76ac8c2e07979ae0757f4fe0f6111d45eca")
+siglip2 = SigLIP2Searcher(milvus_uri=MILVUS_URI, milvus_token=MILVUS_TOKEN)
 # siglip2.load_path_id_map()
 # siglip2.load_model(device="cuda")
 
@@ -35,7 +37,8 @@ manager = create_searchers(
     siglip2=siglip2,
     es=es,
     google_searcher=google_searcher,
-    db_url="http://milvus:19530",
+    db_url=MILVUS_URI,
+    db_token=MILVUS_TOKEN,
     img_search_model="siglip2"
 )
 

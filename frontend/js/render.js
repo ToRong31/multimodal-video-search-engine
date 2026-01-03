@@ -18,18 +18,40 @@ export async function loadCardTemplate() {
     }
 }
 
-export function renderCard(cardData) {
+export function renderCard(cardData, metadata = {}) {
+    // ID is numeric, lookup path in metadata
+    const id = cardData.id;
+    let imagePath = metadata[id] || cardData.url || '';
+    
+    // Parse path to extract video name and frame
+    // Format: "../../data/keyframe/L01_V001/keyframe_0.webp"
+    let videoName = 'Unknown';
+    let frameNumber = '0';
+    
+    if (imagePath) {
+        // Extract video name: L01_V001
+        const videoMatch = imagePath.match(/\/([A-Z0-9_]+)\/keyframe_/);
+        if (videoMatch) {
+            videoName = videoMatch[1];
+        }
+        
+        // Extract frame number: keyframe_0.webp -> 0
+        const frameMatch = imagePath.match(/keyframe_(\d+)\.webp/);
+        if (frameMatch) {
+            frameNumber = frameMatch[1];
+        }
+        
+        // Build proper URL: /data/keyframe/L01_V001/keyframe_0.webp
+        imagePath = imagePath.replace('../../data/', '/data/');
+    }
+    
     const template = `
-        <div class="card" data-id="${cardData.id}">
+        <div class="card" data-id="${id}">
             <div class="card-image">
-                <img src="${cardData.url}" alt="${cardData.title}" loading="lazy" onerror="this.src='/api/placeholder.jpg'">
-            </div>
-            <div class="card-content">
-                <h3 class="card-title">${cardData.title || 'Result ' + cardData.id}</h3>
-                <p class="card-description">${cardData.description || 'Search result'}</p>
-                <div class="card-meta">
-                    <span class="card-score">Score: ${(cardData.score || 0).toFixed(4)}</span>
-                    <span class="card-id">ID: ${cardData.id}</span>
+                <img src="${imagePath}" alt="${videoName} - Frame ${frameNumber}" loading="lazy" onerror="this.style.display='none'">
+                <div class="card-overlay">
+                    <div class="card-video-name">${videoName}</div>
+                    <div class="card-frame">Frame ${frameNumber}</div>
                 </div>
             </div>
         </div>
@@ -37,7 +59,7 @@ export function renderCard(cardData) {
     return template;
 }
 
-export function renderResults(results, containerId = 'results-grid') {
+export function renderResults(results, metadata = {}, containerId = 'results-grid', isGrouped = false) {
     const container = document.getElementById(containerId);
     if (!container) return;
     
@@ -48,9 +70,39 @@ export function renderResults(results, containerId = 'results-grid') {
         return;
     }
     
-    results.forEach(result => {
-        const cardHTML = renderCard(result);
-        container.insertAdjacentHTML('beforeend', cardHTML);
+    if (isGrouped && Array.isArray(results[0])) {
+        // Render grouped results (temporal mode with groups)
+        results.forEach((group, groupIndex) => {
+            if (!Array.isArray(group) || group.length === 0) return;
+            
+            const groupDiv = document.createElement('div');
+            groupDiv.className = 'result-group';
+            groupDiv.dataset.groupIndex = groupIndex;
+            
+            group.forEach(result => {
+                const cardHTML = renderCard(result, metadata);
+                groupDiv.insertAdjacentHTML('beforeend', cardHTML);
+            });
+            
+            container.appendChild(groupDiv);
+        });
+    } else {
+        // Render flat results (single/image mode)
+        results.forEach(result => {
+            const cardHTML = renderCard(result, metadata);
+            container.insertAdjacentHTML('beforeend', cardHTML);
+        });
+    }
+    
+    // Add click handlers to all cards
+    container.querySelectorAll('.card').forEach(card => {
+        card.addEventListener('click', function() {
+            const videoName = this.querySelector('.card-video-name')?.textContent;
+            const frameNumber = this.querySelector('.card-frame')?.textContent;
+            if (videoName && window.openYoutubeModal) {
+                window.openYoutubeModal(videoName, frameNumber);
+            }
+        });
     });
 }
 

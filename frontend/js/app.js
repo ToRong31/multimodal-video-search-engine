@@ -10,12 +10,17 @@ import { searchApi } from '../api/searchApi.js';
 const appState = {
     currentMode: 'single', // 'single', 'temporal', 'image'
     uploadedImageId: null,
-    currentResults: []
+    currentResults: [],
+    pathKeyframeMetadata: {}, // Store path_keyframe.json
+    youtubeUrls: {} // Store Youtube_URL.json mapping (folder -> url)
 };
 
 // Initialize app
 async function init() {
     console.log('🚀 Initializing AIC Video Search App...');
+    
+    // Load metadata
+    await loadMetadata();
     
     // Load components and home page
     await loadComponents();
@@ -24,14 +29,39 @@ async function init() {
     // Setup event listeners
     setupEventListeners();
     
+    // Setup modal handlers
+    setupModalHandlers();
+    
     console.log('✅ App initialized successfully');
 }
 
+async function loadMetadata() {
+    try {
+        const [pathResponse, urlResponse] = await Promise.all([
+            fetch('/data/metadata/path_keyframe.json'),
+            fetch('/data/URL/Youtube_URL.json')
+        ]);
+        
+        appState.pathKeyframeMetadata = await pathResponse.json();
+        const youtubeData = await urlResponse.json();
+        
+        // Convert array to object mapping folder -> watch_url
+        appState.youtubeUrls = {};
+        youtubeData.forEach(item => {
+            appState.youtubeUrls[item.folder] = item.watch_url;
+        });
+        
+        console.log('✅ Loaded metadata and YouTube URLs');
+    } catch (error) {
+        console.error('❌ Failed to load metadata:', error);
+    }
+}
+
 function setupEventListeners() {
-    // Mode switching buttons
-    document.addEventListener('click', (e) => {
-        if (e.target.classList.contains('mode-btn')) {
-            handleModeSwitch(e.target);
+    // Mode switching with radio buttons
+    document.addEventListener('change', (e) => {
+        if (e.target.name === 'mode') {
+            handleModeSwitch(e.target.value);
         }
     });
 
@@ -55,21 +85,20 @@ function setupEventListeners() {
 
     // Image upload
     setupImageUpload();
+    
+    // Language toggle buttons
+    setupLanguageToggle();
 }
 
-function handleModeSwitch(button) {
-    const mode = button.dataset.mode;
-    
-    // Update button states
-    document.querySelectorAll('.mode-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    button.classList.add('active');
-    
+function handleModeSwitch(mode) {
     // Hide all search sections
     document.querySelectorAll('.search-section').forEach(section => {
         section.classList.add('hidden');
     });
+    
+    // Hide all top input sections
+    document.getElementById('single-inputs')?.classList.add('hidden');
+    document.getElementById('temporal-inputs')?.classList.add('hidden');
     
     // Show selected section
     const sectionMap = {
@@ -78,9 +107,20 @@ function handleModeSwitch(button) {
         'image': 'image-search'
     };
     
+    const inputMap = {
+        'single': 'single-inputs',
+        'temporal': 'temporal-inputs'
+    };
+    
     const targetSection = document.getElementById(sectionMap[mode]);
     if (targetSection) {
         targetSection.classList.remove('hidden');
+    }
+    
+    // Show corresponding top inputs
+    const targetInputs = document.getElementById(inputMap[mode]);
+    if (targetInputs) {
+        targetInputs.classList.remove('hidden');
     }
     
     appState.currentMode = mode;
@@ -91,7 +131,8 @@ async function handleSingleSearch() {
     const query = document.getElementById('single-query')?.value.trim();
     const ocr = document.getElementById('single-ocr')?.value.trim();
     const asr = document.getElementById('single-asr')?.value.trim();
-    const useTrans = document.getElementById('use-trans')?.checked;
+    const langBtn = document.getElementById('lang-toggle');
+    const useTrans = langBtn?.dataset.lang === 'vie';
     
     if (!query && !ocr && !asr) {
         alert('Please enter at least one search query');
@@ -121,10 +162,10 @@ async function handleSingleSearch() {
         console.log('✅ Search response:', response);
         
         // Extract results from response
-        const results = extractResults(response);
-        appState.currentResults = results;
+        const extractedData = extractResults(response);
+        appState.currentResults = extractedData.results;
         
-        renderResults(results);
+        renderResults(extractedData.results, appState.pathKeyframeMetadata, 'results-grid', extractedData.isGrouped);
         showResults();
         
     } catch (error) {
@@ -149,7 +190,8 @@ async function handleTemporalSearch() {
     ];
     
     const asr = document.getElementById('temporal-asr')?.value.trim();
-    const useTrans = document.getElementById('use-trans-temporal')?.checked;
+    const langBtn = document.getElementById('lang-toggle-temporal');
+    const useTrans = langBtn?.dataset.lang === 'vie';
     
     if (!queries[0] && !queries[1] && !queries[2] && !ocrs[0] && !ocrs[1] && !ocrs[2] && !asr) {
         alert('Please enter at least one query');
@@ -179,10 +221,10 @@ async function handleTemporalSearch() {
         
         console.log('✅ Temporal search response:', response);
         
-        const results = extractResults(response);
-        appState.currentResults = results;
+        const extractedData = extractResults(response);
+        appState.currentResults = extractedData.results;
         
-        renderResults(results);
+        renderResults(extractedData.results, appState.pathKeyframeMetadata, 'results-grid', extractedData.isGrouped);
         showResults();
         
     } catch (error) {
@@ -228,7 +270,7 @@ async function handleImageSearch() {
         const results = response.results || [];
         appState.currentResults = results;
         
-        renderResults(results);
+        renderResults(results, appState.pathKeyframeMetadata);
         showResults();
         
     } catch (error) {
@@ -353,29 +395,154 @@ function clearUploadedImage() {
     appState.uploadedImageId = null;
 }
 
+function setupLanguageToggle() {
+    // Single search language toggle
+    const langToggle = document.getElementById('lang-toggle');
+    if (langToggle) {
+        langToggle.addEventListener('click', function() {
+            const currentLang = this.dataset.lang;
+            if (currentLang === 'vie') {
+                this.dataset.lang = 'eng';
+                this.textContent = 'ENG';
+            } else {
+                this.dataset.lang = 'vie';
+                this.textContent = 'VIE';
+            }
+        });
+    }
+    
+    // Temporal search language toggle
+    const langToggleTemporal = document.getElementById('lang-toggle-temporal');
+    if (langToggleTemporal) {
+        langToggleTemporal.addEventListener('click', function() {
+            const currentLang = this.dataset.lang;
+            if (currentLang === 'vie') {
+                this.dataset.lang = 'eng';
+                this.textContent = 'ENG';
+            } else {
+                this.dataset.lang = 'vie';
+                this.textContent = 'VIE';
+            }
+        });
+    }
+}
+
 function extractResults(response) {
+    const MAX_RESULTS = 50; // Limit display to 50 images
+    
     // Handle different response formats
     if (Array.isArray(response)) {
-        return response;
+        return { results: response.slice(0, MAX_RESULTS), isGrouped: false };
+    }
+    
+    // Check for grouped temporal results (ensemble_qx_0, ensemble_qx_1, etc.)
+    const groupedKeys = Object.keys(response).filter(key => key.startsWith('ensemble_qx_'));
+    if (groupedKeys.length > 0) {
+        // Extract first grouped result set
+        const firstKey = groupedKeys.sort()[0];
+        const groupedResults = response[firstKey];
+        if (Array.isArray(groupedResults) && groupedResults.length > 0) {
+            return { results: groupedResults.slice(0, MAX_RESULTS), isGrouped: true };
+        }
+    }
+    
+    // Check for ensemble_all_queries_all_methods first (most common for single/temporal search)
+    if (response.ensemble_all_queries_all_methods && Array.isArray(response.ensemble_all_queries_all_methods)) {
+        return { results: response.ensemble_all_queries_all_methods.slice(0, MAX_RESULTS), isGrouped: false };
     }
     
     if (response.results) {
-        return response.results;
+        return { results: response.results.slice(0, MAX_RESULTS), isGrouped: false };
     }
     
     if (response.image_search) {
-        return response.image_search;
+        return { results: response.image_search.slice(0, MAX_RESULTS), isGrouped: false };
     }
     
     // Try to extract from nested structure
     const possibleKeys = ['results', 'data', 'items', 'image_search'];
     for (let key of possibleKeys) {
         if (response[key] && Array.isArray(response[key])) {
-            return response[key];
+            return response[key].slice(0, MAX_RESULTS);
         }
     }
     
     return [];
+}
+
+function setupModalHandlers() {
+    const modal = document.getElementById('youtube-modal');
+    const closeBtn = modal?.querySelector('.modal-close');
+    
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+            closeYoutubeModal();
+        });
+    }
+    
+    // Close modal when clicking outside
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeYoutubeModal();
+            }
+        });
+    }
+    
+    // Expose modal functions globally
+    window.openYoutubeModal = openYoutubeModal;
+    window.closeYoutubeModal = closeYoutubeModal;
+}
+
+function openYoutubeModal(videoName, frameInfo) {
+    const modal = document.getElementById('youtube-modal');
+    const player = document.getElementById('youtube-player');
+    const title = document.getElementById('modal-video-title');
+    
+    if (!modal || !player) return;
+    
+    // Get YouTube URL from mapping
+    const youtubeUrl = appState.youtubeUrls[videoName];
+    
+    if (!youtubeUrl) {
+        console.warn('No YouTube URL found for:', videoName);
+        alert('Video URL not found for ' + videoName);
+        return;
+    }
+    
+    // Convert watch URL to embed URL
+    // https://youtube.com/watch?v=1yHly8dYhIQ -> https://www.youtube.com/embed/1yHly8dYhIQ
+    const videoId = youtubeUrl.split('v=')[1]?.split('&')[0];
+    if (!videoId) {
+        console.error('Invalid YouTube URL:', youtubeUrl);
+        return;
+    }
+    
+    const embedUrl = `https://www.youtube.com/embed/${videoId}`;
+    
+    // Set iframe src
+    player.src = embedUrl;
+    
+    // Set title
+    if (title) {
+        title.textContent = `${videoName} - ${frameInfo}`;
+    }
+    
+    // Show modal
+    modal.style.display = 'flex';
+}
+
+function closeYoutubeModal() {
+    const modal = document.getElementById('youtube-modal');
+    const player = document.getElementById('youtube-player');
+    
+    if (modal) {
+        modal.style.display = 'none';
+    }
+    
+    if (player) {
+        player.src = ''; // Stop video playback
+    }
 }
 
 // Start the app when DOM is ready

@@ -26,7 +26,8 @@ class ModeImageSearcher:
         siglip2: Optional[SigLIP2Searcher] = None,
         es: Optional[ElasticSearcher] = None,
         google_searcher: Optional[GoogleSearcher] = None,
-        db_url: str = "http://milvus:19530",
+        db_url: Optional[str] = None,
+        db_token: Optional[str] = None,
         topk_each: int = 100,
         topk_final: int = 100,
         topk_prev: int = 500,
@@ -38,7 +39,7 @@ class ModeImageSearcher:
         self.es = es
         self.google_searcher = google_searcher
 
-        self.db_manager = DatabaseManager(db_url)
+        self.db_manager = DatabaseManager(db_url, db_token)
         self.topk_each = topk_each
         self.topk_final = topk_final
         self.topk_prev = topk_prev

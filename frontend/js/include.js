@@ -22,8 +22,7 @@ export async function includeHTML(selector, htmlPath) {
 
 export async function loadComponents() {
     await Promise.all([
-        includeHTML('#navbar-placeholder', 'html/components/navbar.html'),
-        includeHTML('#footer-placeholder', 'html/components/footer.html')
+        includeHTML('#navbar-placeholder', 'html/components/navbar.html')
     ]);
 }
 

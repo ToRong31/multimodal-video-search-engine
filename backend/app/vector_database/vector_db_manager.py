@@ -3,9 +3,16 @@ from app.vector_database.vector_db import MilvusVectorDB
 
 class DatabaseManager:
     
-    def __init__(self, milvus_uri: str = "http://milvus:19530", milvus_token: Optional[str] = None):
-        self.milvus_uri = milvus_uri
-        self.milvus_token = milvus_token
+    def __init__(self, milvus_uri: Optional[str] = None, milvus_token: Optional[str] = None):
+        # Import here to avoid circular dependency
+        try:
+            from app.config.settings import MILVUS_URI, MILVUS_TOKEN
+            self.milvus_uri = milvus_uri or MILVUS_URI
+            self.milvus_token = milvus_token or MILVUS_TOKEN
+        except ImportError:
+            # Fallback if settings not available
+            self.milvus_uri = milvus_uri or "http://milvus:19530"
+            self.milvus_token = milvus_token
         self._collections: Dict[str, MilvusVectorDB] = {}
         
         self.collection_configs = {

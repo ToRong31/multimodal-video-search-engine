@@ -9,9 +9,14 @@ from pymilvus import MilvusClient
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 FOLDER_PATH = os.path.join(PROJECT_ROOT, "data", "index", "dense")
 
-# Zilliz Cloud Configuration (load from environment or use defaults)
-MILVUS_URI = os.getenv("ZILLIZ_CLOUD_URI", "http://milvus:19530")
-MILVUS_TOKEN = os.getenv("ZILLIZ_CLOUD_TOKEN", None)
+# Milvus Cloud Configuration (load from environment or use defaults)
+try:
+    from app.config.settings import MILVUS_URI as SETTINGS_MILVUS_URI, MILVUS_TOKEN as SETTINGS_MILVUS_TOKEN
+    MILVUS_URI = os.getenv("MILVUS_URI", SETTINGS_MILVUS_URI)
+    MILVUS_TOKEN = os.getenv("MILVUS_TOKEN", SETTINGS_MILVUS_TOKEN)
+except ImportError:
+    MILVUS_URI = os.getenv("MILVUS_URI", os.getenv("ZILLIZ_CLOUD_URI", "http://milvus:19530"))
+    MILVUS_TOKEN = os.getenv("MILVUS_TOKEN", os.getenv("ZILLIZ_CLOUD_TOKEN", None))
 DISTANCE = "COSINE"
 BATCH_SIZE = 100  # Reduced batch size to save RAM during indexing
 NUM_UPLOAD_WORKERS = 1  # Parallel workers per collection (using thread-local clients)
@@ -21,7 +26,7 @@ NUM_COLLECTIONS_PARALLEL = 1  # Process collections sequentially to avoid gRPC c
 ONLY_COLLECTIONS = ["siglip2"]
 
 def wait_for_milvus(milvus_uri: Optional[str], milvus_token: Optional[str], timeout: int = 180, interval: float = 3.0) -> bool:
-    uri = milvus_uri or "http://milvus:19530"
+    uri = milvus_uri or MILVUS_URI
     deadline = time.time() + timeout
     last_err = None
     while time.time() < deadline:
@@ -127,7 +132,7 @@ def upload_folder_to_milvus(
 
     is_cloud = "zillizcloud.com" in (milvus_uri or "")
     print(f"\n🚀 Starting upload to {'Zilliz Cloud' if is_cloud else 'Milvus'} of {len(bin_files)} collections")
-    print(f"   - URI: {milvus_uri or 'http://milvus:19530'}")
+    print(f"   - URI: {milvus_uri or MILVUS_URI}")
     print(f"   - Collections: {[os.path.splitext(f)[0] for f in bin_files]}")
     print(f"   - Parallel collections: {parallel_collections}")
     print(f"   - Workers per collection: {NUM_UPLOAD_WORKERS}")

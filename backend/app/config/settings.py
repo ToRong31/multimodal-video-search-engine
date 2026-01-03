@@ -8,9 +8,10 @@ COHERE_KEYS = os.getenv("COHERE_API_KEY", "").split(",")
 
 GEMINI_MODEL_NAME = os.getenv("GEMINI_MODEL_NAME", "gemini-pro")
 
-# ----- Zilliz Cloud Configuration -----
-ZILLIZ_CLOUD_URI = os.getenv("ZILLIZ_CLOUD_URI", "https://in03-xxxxxxxxxxxx.api.gcp-us-west1.zillizcloud.com")
-ZILLIZ_CLOUD_TOKEN = os.getenv("ZILLIZ_CLOUD_TOKEN", "")
+# ----- Milvus Cloud (Zilliz Cloud) Configuration -----
+# Use Milvus Cloud for all vector database operations
+MILVUS_URI = os.getenv("MILVUS_URI", os.getenv("ZILLIZ_CLOUD_URI", "https://in03-xxxxxxxxxxxx.api.gcp-us-west1.zillizcloud.com"))
+MILVUS_TOKEN = os.getenv("MILVUS_TOKEN", os.getenv("ZILLIZ_CLOUD_TOKEN", ""))
 
 # ----- TopK configuration (override via environment) -----
 def _get_int(name: str, default: int) -> int:

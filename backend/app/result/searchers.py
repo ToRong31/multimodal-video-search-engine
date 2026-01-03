@@ -22,12 +22,27 @@ def create_searchers(
     siglip2: Optional[SigLIP2Searcher] = None,
     es: Optional[ElasticSearcher] = None,
     google_searcher: Optional[GoogleSearcher] = None,
-    db_url: str = "http://milvus:19530",
+    db_url: Optional[str] = None,
+    db_token: Optional[str] = None,
     topk_each: int = 300,
     topk_final: int = 100,
     topk_prev: int = 500,
     img_search_model: str = "h14_quickgelu"
 ) -> MixedSearchManager:
+    # Use cloud settings by default
+    if db_url is None:
+        try:
+            from app.config.settings import MILVUS_URI
+            db_url = MILVUS_URI
+        except ImportError:
+            db_url = "http://milvus:19530"
+    
+    if db_token is None:
+        try:
+            from app.config.settings import MILVUS_TOKEN
+            db_token = MILVUS_TOKEN
+        except ImportError:
+            db_token = None
 
     mode_scene_searcher = ModeSceneSearcher(
         es=es,
@@ -43,6 +58,7 @@ def create_searchers(
         es=es,
         google_searcher=google_searcher,
         db_url=db_url,
+        db_token=db_token,
         topk_each=topk_each,
         topk_final=topk_final,
         topk_prev=topk_prev
@@ -52,12 +68,14 @@ def create_searchers(
         image_search = ImageSearch(
             siglip2_searcher=siglip2,
             db_url=db_url,
+            db_token=db_token,
             topk_each=topk_final
         )
     else:
         image_search = ImageSearch(
             clip_searcher=clip_searcher,
             db_url=db_url,
+            db_token=db_token,
             topk_each=topk_final
         )
     
