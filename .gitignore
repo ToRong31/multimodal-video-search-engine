@@ -36,6 +36,11 @@ data/metadata/
 *.avi
 *.mov
 
+# Allow images in the image/ directory (for README demo screenshots)
+!image/**/*.png
+!image/**/*.jpg
+!image/**/*.jpeg
+
 # Keep specific configuration files if needed
 !data/metadata/fps_mapping.json
 !data/metadata/path_scene.json
